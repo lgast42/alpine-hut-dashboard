@@ -124,18 +124,21 @@ function App() {
       <footer className="dashboard-footer">
         <div>
           <h4>Datenquellen</h4>
-          <p>Niederschlag: SPARTACUS v2.1 (GeoSphere Austria)</p>
-          <p>Schneebedeckung: Sentinel-2 NDSI (&gt; 0,4)</p>
+          <p>Schneebedeckung: Sentinel-2 L2A (ESA/Copernicus)</p>
+          <p>Niederschlag: SPARTACUS v2.1 (GeoSphere Austria), 1 km Gitter</p>
+          <p>Geländemodell: DGM 0,5 m (Land Tirol / tiris)</p>
         </div>
         <div>
           <h4>Methodik</h4>
-          <p>Einzugsgebiet modelliert via hydrologische Modellierung MFD</p>
-          <p>Koordinatensystem: EPSG:4326 (WGS 84)</p>
+          <p>Einzugsgebiet: hydrologische Modellierung</p>
+          <p>Validierung: gegen Referenzkartierung geprueft</p>
+          <p>Zeitraum: Bewirtschaftungssaison Mai–September, 2018–2025</p>
         </div>
         <div>
           <h4>Projekt</h4>
-          <p>Hydrologische Resilienz alpiner Schutzhütten</p>
-          <p>Saisonzeitraum: Mai–September 2018–2025</p>
+          <p>Lucas Gasthauer · B.Sc. Geographie</p>
+          <p>Universität Innsbruck · Institut für Geographie</p>
+          <p>Kurs: Methoden der Datenerfassung · WiSe 25/26</p>
         </div>
       </footer>
     </div>
