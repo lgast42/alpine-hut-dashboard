@@ -3,6 +3,7 @@ import './App.css'
 import Map from './components/Map'
 import HydrologicalChart from './components/HydrologicalChart'
 import AnnualTable from './components/AnnualTable'
+import ScalingView from './components/ScalingView'
 
 const LAYER_DEFS = [
   { key: 'catchment', label: 'Einzugsgebiet',    ids: ['catchment-fill', 'catchment-outline'] },
@@ -114,6 +115,10 @@ function App() {
           <h2>Jahresvergleich 2018–2025</h2>
           <AnnualTable />
         </div>
+      </section>
+
+      <section className="scaling-section">
+        <ScalingView />
       </section>
 
       <footer className="dashboard-footer">
