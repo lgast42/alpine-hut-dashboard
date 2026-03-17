@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import './App.css'
 import Map from './components/Map'
 import HydrologicalChart from './components/HydrologicalChart'
+import AnnualTable from './components/AnnualTable'
 
 const LAYER_DEFS = [
   { key: 'catchment', label: 'Einzugsgebiet',    ids: ['catchment-fill', 'catchment-outline'] },
@@ -111,7 +112,7 @@ function App() {
         </div>
         <div className="table-panel">
           <h2>Jahresvergleich 2018–2025</h2>
-          <div className="table-placeholder">Tabelle wird geladen…</div>
+          <AnnualTable />
         </div>
       </section>
 
