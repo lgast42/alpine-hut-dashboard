@@ -1,120 +1,81 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="dashboard">
+      <header className="dashboard-header">
+        <div className="header-title">
+          <h1>Hydrologische Resilienz alpiner Schutzhütten</h1>
+          <p className="header-subtitle">Neue Prager Hütte · 2796 m · Innergschlöß, Osttirol</p>
+        </div>
+        <div className="header-meta">
+          <span>Hohe Tauern</span>
+        </div>
+      </header>
+
+      <section className="map-section">
+        <div className={`map-container${sidebarOpen ? '' : ' sidebar-closed'}`}>
+          <div className="map-placeholder">Karte wird geladen…</div>
+        </div>
+        <aside className={`map-sidebar${sidebarOpen ? ' open' : ' closed'}`}>
+          <button
+            className="sidebar-toggle"
+            onClick={() => setSidebarOpen(v => !v)}
+            aria-label={sidebarOpen ? 'Sidebar schließen' : 'Sidebar öffnen'}
+          >
+            {sidebarOpen ? '›' : '‹'}
+          </button>
+          <div className="sidebar-content">
+            <h3>Legende</h3>
+            <ul className="legend-list">
+              <li><span className="legend-swatch catchment"></span>Einzugsgebiet (2,10 ha)</li>
+              <li><span className="legend-swatch flow"></span>Fließlinien</li>
+              <li><span className="legend-swatch pipeline"></span>Wasserleitung</li>
+              <li><span className="legend-swatch hut"></span>Neue Prager Hütte</li>
+              <li><span className="legend-swatch intake"></span>Tankfassung</li>
+            </ul>
+            <h3>Layer-Steuerung</h3>
+            <ul className="layer-list">
+              <li><label><input type="checkbox" defaultChecked /> Einzugsgebiet</label></li>
+              <li><label><input type="checkbox" defaultChecked /> Fließlinien</label></li>
+              <li><label><input type="checkbox" defaultChecked /> Wasserleitung</label></li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+
+      <section className="analysis-section">
+        <div className="chart-panel">
+          <h2>Hydrologischer Fingerabdruck</h2>
+          <div className="chart-placeholder">Diagramm wird geladen…</div>
+        </div>
+        <div className="table-panel">
+          <h2>Jahresvergleich 2018–2025</h2>
+          <div className="table-placeholder">Tabelle wird geladen…</div>
+        </div>
+      </section>
+
+      <footer className="dashboard-footer">
+        <div>
+          <h4>Datenquellen</h4>
+          <p>Niederschlag: SPARTACUS v2.1 (GeoSphere Austria)</p>
+          <p>Schneebedeckung: Sentinel-2 NDSI (&gt; 0,4)</p>
         </div>
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+          <h4>Methodik</h4>
+          <p>Einzugsgebiet modelliert via hydrologische Modellierung MFD</p>
+          <p>Koordinatensystem: EPSG:4326 (WGS 84)</p>
         </div>
-        <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div>
+          <h4>Projekt</h4>
+          <p>Hydrologische Resilienz alpiner Schutzhütten</p>
+          <p>Saisonzeitraum: Mai–September 2018–2025</p>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      </footer>
+    </div>
   )
 }
 
