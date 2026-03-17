@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './App.css'
+import Map from './components/Map'
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -18,7 +19,7 @@ function App() {
 
       <section className="map-section">
         <div className={`map-container${sidebarOpen ? '' : ' sidebar-closed'}`}>
-          <div className="map-placeholder">Karte wird geladen…</div>
+          <Map />
         </div>
         <aside className={`map-sidebar${sidebarOpen ? ' open' : ' closed'}`}>
           <button
