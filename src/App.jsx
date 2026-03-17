@@ -1,9 +1,27 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import './App.css'
 import Map from './components/Map'
 
+const LAYER_DEFS = [
+  { key: 'catchment', label: 'Einzugsgebiet',    ids: ['catchment-fill', 'catchment-outline'] },
+  { key: 'flow',      label: 'Abflussbahnen',     ids: ['flow-lines'] },
+  { key: 'pipeline',  label: 'Wasserleitung',      ids: ['pipeline'] },
+  { key: 'hut',       label: 'Neue Prager Hütte', ids: ['hut'] },
+  { key: 'intake',    label: 'Tankfassung',        ids: ['intake'] },
+]
+
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [layerVisible, setLayerVisible] = useState(
+    Object.fromEntries(LAYER_DEFS.map(l => [l.key, true]))
+  )
+  const mapRef = useRef(null)
+
+  function toggleLayer(def, checked) {
+    setLayerVisible(prev => ({ ...prev, [def.key]: checked }))
+    const vis = checked ? 'visible' : 'none'
+    def.ids.forEach(id => mapRef.current?.setLayoutProperty(id, 'visibility', vis))
+  }
 
   return (
     <div className="dashboard">
@@ -19,7 +37,7 @@ function App() {
 
       <section className="map-section">
         <div className={`map-container${sidebarOpen ? '' : ' sidebar-closed'}`}>
-          <Map />
+          <Map onMapReady={map => { mapRef.current = map }} />
         </div>
         <aside className={`map-sidebar${sidebarOpen ? ' open' : ' closed'}`}>
           <button
@@ -29,21 +47,58 @@ function App() {
           >
             {sidebarOpen ? '›' : '‹'}
           </button>
+
           <div className="sidebar-content">
-            <h3>Legende</h3>
+            <h3>Kartenlegende</h3>
             <ul className="legend-list">
-              <li><span className="legend-swatch catchment"></span>Einzugsgebiet (2,10 ha)</li>
-              <li><span className="legend-swatch flow"></span>Fließlinien</li>
-              <li><span className="legend-swatch pipeline"></span>Wasserleitung</li>
-              <li><span className="legend-swatch hut"></span>Neue Prager Hütte</li>
-              <li><span className="legend-swatch intake"></span>Tankfassung</li>
+              <li>
+                <span className="legend-swatch hut" />
+                Neue Prager Hütte (2796 m)
+              </li>
+              <li>
+                <span className="legend-swatch intake" />
+                Tankfassung (2740 m)
+              </li>
+              <li>
+                <span className="legend-swatch catchment" />
+                Einzugsgebiet (2,10 ha)
+              </li>
+              <li>
+                <span className="legend-swatch flow" />
+                Hydrologische Abflussbahnen
+              </li>
+              <li>
+                <span className="legend-swatch pipeline" />
+                Wasserleitung
+              </li>
             </ul>
-            <h3>Layer-Steuerung</h3>
+
+            <h3>Layer ein-/ausblenden</h3>
             <ul className="layer-list">
-              <li><label><input type="checkbox" defaultChecked /> Einzugsgebiet</label></li>
-              <li><label><input type="checkbox" defaultChecked /> Fließlinien</label></li>
-              <li><label><input type="checkbox" defaultChecked /> Wasserleitung</label></li>
+              {LAYER_DEFS.map(def => (
+                <li key={def.key}>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={layerVisible[def.key]}
+                      onChange={e => toggleLayer(def, e.target.checked)}
+                    />
+                    {def.label}
+                  </label>
+                </li>
+              ))}
             </ul>
+
+            <hr className="sidebar-divider" />
+
+            <dl className="site-info">
+              <dt>Höhenbereich</dt>
+              <dd>2740–2900 m</dd>
+              <dt>Substrat</dt>
+              <dd>Blockschutt (periglazial)</dd>
+              <dt>Ehemaliger Gletscher</dt>
+              <dd>Schlatenkees (&gt;1,5 km entfernt)</dd>
+            </dl>
           </div>
         </aside>
       </section>
