@@ -21,25 +21,25 @@ function setupLayers(map) {
   })
   map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.0 })
 
-  map.addSource('catchment', { type: 'geojson', data: '/data/catchment_polygon.geojson' })
+  map.addSource('catchment', { type: 'geojson', data: `${import.meta.env.BASE_URL}data/catchment_polygon.geojson` })
   map.addLayer({ id: 'catchment-fill', type: 'fill', source: 'catchment',
     paint: { 'fill-color': '#3182CE', 'fill-opacity': 0.15 } })
   map.addLayer({ id: 'catchment-outline', type: 'line', source: 'catchment',
     paint: { 'line-color': '#2B6CB0', 'line-width': 2, 'line-dasharray': [4, 2] } })
 
-  map.addSource('flow', { type: 'geojson', data: '/data/flow_lines.geojson' })
+  map.addSource('flow', { type: 'geojson', data: `${import.meta.env.BASE_URL}data/flow_lines.geojson` })
   map.addLayer({ id: 'flow-lines', type: 'line', source: 'flow',
     paint: { 'line-color': '#00BCD4', 'line-width': 1.5, 'line-opacity': 0.7 } })
 
-  map.addSource('pipeline', { type: 'geojson', data: '/data/wasserleitung_line.geojson' })
+  map.addSource('pipeline', { type: 'geojson', data: `${import.meta.env.BASE_URL}data/wasserleitung_line.geojson` })
   map.addLayer({ id: 'pipeline', type: 'line', source: 'pipeline',
     paint: { 'line-color': '#2B6CB0', 'line-width': 2.5, 'line-dasharray': [6, 3] } })
 
-  map.addSource('hut', { type: 'geojson', data: '/data/NPH_wgs84.geojson' })
+  map.addSource('hut', { type: 'geojson', data: `${import.meta.env.BASE_URL}data/NPH_wgs84.geojson` })
   map.addLayer({ id: 'hut', type: 'circle', source: 'hut',
     paint: { 'circle-radius': 8, 'circle-color': '#E53E3E', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } })
 
-  map.addSource('intake', { type: 'geojson', data: '/data/tankfassung_nph.geojson' })
+  map.addSource('intake', { type: 'geojson', data: `${import.meta.env.BASE_URL}data/tankfassung_nph.geojson` })
   map.addLayer({ id: 'intake', type: 'circle', source: 'intake',
     paint: { 'circle-radius': 7, 'circle-color': '#2B6CB0', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } })
 }
