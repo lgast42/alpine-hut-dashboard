@@ -6,15 +6,15 @@ import AnnualTable from './components/AnnualTable'
 import ScalingView from './components/ScalingView'
 
 const LAYER_DEFS = [
-  { key: 'catchment', label: 'Einzugsgebiet',    ids: ['catchment-fill', 'catchment-outline'] },
-  { key: 'flow',      label: 'Abflussbahnen',     ids: ['flow-lines'] },
-  { key: 'pipeline',  label: 'Wasserleitung',      ids: ['pipeline'] },
-  { key: 'hut',       label: 'Neue Prager Hütte', ids: ['hut'] },
-  { key: 'intake',    label: 'Tankfassung',        ids: ['intake'] },
+  { key: 'hut',       label: 'Neue Prager Hütte (2796 m)', ids: ['hut'] },
+  { key: 'intake',    label: 'Tankfassung (2740 m)',        ids: ['intake'] },
+  { key: 'catchment', label: 'Einzugsgebiet (2,10 ha)',     ids: ['catchment-fill', 'catchment-outline'] },
+  { key: 'flow',      label: 'Hydrologische Abflussbahnen', ids: ['flow-lines'] },
+  { key: 'pipeline',  label: 'Wasserleitung',                ids: ['pipeline'] },
 ]
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768)
   const [layerVisible, setLayerVisible] = useState(
     Object.fromEntries(LAYER_DEFS.map(l => [l.key, true]))
   )
@@ -39,7 +39,7 @@ function App() {
       </header>
 
       <section className="map-section">
-        <div className={`map-container${sidebarOpen ? '' : ' sidebar-closed'}`}>
+        <div className="map-container">
           <Map onMapReady={map => { mapRef.current = map }} />
         </div>
         <aside className={`map-sidebar${sidebarOpen ? ' open' : ' closed'}`}>
@@ -47,36 +47,13 @@ function App() {
             className="sidebar-toggle"
             onClick={() => setSidebarOpen(v => !v)}
             aria-label={sidebarOpen ? 'Sidebar schließen' : 'Sidebar öffnen'}
+            title={sidebarOpen ? 'Legende schließen' : 'Legende öffnen'}
           >
-            {sidebarOpen ? '›' : '‹'}
+            {sidebarOpen ? '✕' : '☰'}
           </button>
 
           <div className="sidebar-content">
             <h3>Kartenlegende</h3>
-            <ul className="legend-list">
-              <li>
-                <span className="legend-swatch hut" />
-                Neue Prager Hütte (2796 m)
-              </li>
-              <li>
-                <span className="legend-swatch intake" />
-                Tankfassung (2740 m)
-              </li>
-              <li>
-                <span className="legend-swatch catchment" />
-                Einzugsgebiet (2,10 ha)
-              </li>
-              <li>
-                <span className="legend-swatch flow" />
-                Hydrologische Abflussbahnen
-              </li>
-              <li>
-                <span className="legend-swatch pipeline" />
-                Wasserleitung
-              </li>
-            </ul>
-
-            <h3>Layer ein-/ausblenden</h3>
             <ul className="layer-list">
               {LAYER_DEFS.map(def => (
                 <li key={def.key}>
@@ -86,6 +63,7 @@ function App() {
                       checked={layerVisible[def.key]}
                       onChange={e => toggleLayer(def, e.target.checked)}
                     />
+                    <span className={`legend-swatch ${def.key}`} />
                     {def.label}
                   </label>
                 </li>

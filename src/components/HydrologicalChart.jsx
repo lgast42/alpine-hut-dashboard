@@ -60,7 +60,7 @@ function CustomTooltip({ active, payload, label }) {
 
 export default function HydrologicalChart() {
   return (
-    <div style={{ width: '100%' }}>
+    <div className="hydrological-chart" style={{ width: '100%' }}>
       <h3 style={{
         textAlign: 'left',
         fontSize: 16,
@@ -80,7 +80,7 @@ export default function HydrologicalChart() {
         Monatsmittelwerte der Bewirtschaftungssaison · Streuung 2018–2025
       </p>
 
-      <ResponsiveContainer width="100%" height={360}>
+      <ResponsiveContainer width="100%" height={360} minHeight={300}>
         <ComposedChart
           data={chartData}
           margin={{ top: 10, right: 48, bottom: 8, left: 48 }}

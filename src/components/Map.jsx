@@ -125,11 +125,34 @@ export default function Map({ onMapReady }) {
     mapRef.current?.setStyle(style.url)
   }
 
+  function handleHome() {
+    mapRef.current?.flyTo({ center: [12.3923, 47.1231], zoom: 14, pitch: 0, bearing: 0, duration: 1500 })
+  }
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
+      <button
+        onClick={handleHome}
+        title="Zur Standardansicht"
+        aria-label="Zur Standardansicht zurücksetzen"
+        style={{
+          position: 'absolute', bottom: 110, right: 10, zIndex: 1,
+          width: 30, height: 30,
+          background: '#fff',
+          border: 'none',
+          borderRadius: 4,
+          boxShadow: '0 0 0 2px rgba(0,0,0,0.1)',
+          cursor: 'pointer',
+          fontSize: 16,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 0,
+        }}
+      >
+        🏠
+      </button>
       <div style={{
-        position: 'absolute', top: 10, right: 10, zIndex: 1,
+        position: 'absolute', top: 10, left: 10, zIndex: 1,
         display: 'flex', gap: 4,
       }}>
         {STYLES.map(s => (

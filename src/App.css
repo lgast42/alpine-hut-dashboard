@@ -48,19 +48,16 @@
 
 /* Map section */
 .map-section {
-  display: flex;
+  position: relative;
   height: 60vh;
   border-bottom: 1px solid var(--border);
 }
 
 .map-container {
-  flex: 0 0 65%;
+  width: 100%;
+  height: 100%;
   position: relative;
   overflow: hidden;
-}
-
-.map-container.sidebar-closed {
-  flex: 1;
 }
 
 .map-placeholder {
@@ -74,46 +71,56 @@
   font-size: 14px;
 }
 
-/* Sidebar */
+/* Sidebar – overlay over map */
 .map-sidebar {
-  flex: 0 0 35%;
-  border-left: 1px solid var(--border);
-  transition: flex-basis 0.2s ease;
-  overflow: hidden;
-  background: #fff;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.18);
+  border-radius: 8px;
+  width: 268px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  transition: width 0.2s ease;
 }
 
 .map-sidebar.closed {
-  flex-basis: 40px;
+  width: 36px;
 }
 
 .sidebar-toggle {
-  width: 40px;
-  height: 40px;
-  min-height: 40px;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  flex-shrink: 0;
   border: none;
-  border-bottom: 1px solid var(--border);
-  background: #fff;
+  background: transparent;
   cursor: pointer;
-  font-size: 18px;
-  color: #718096;
+  font-size: 16px;
+  color: #4A5568;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  align-self: flex-end;
+  border-radius: 8px;
 }
 
 .sidebar-toggle:hover {
-  background: var(--bg);
+  background: rgba(0, 0, 0, 0.06);
   color: var(--text);
 }
 
 .sidebar-content {
-  padding: 16px;
+  padding: 4px 16px 16px;
   overflow-y: auto;
-  flex: 1;
+  max-height: calc(60vh - 44px);
+}
+
+.map-sidebar.closed .sidebar-content {
+  display: none;
 }
 
 .sidebar-content h3 {
@@ -129,7 +136,6 @@
   margin-top: 20px;
 }
 
-.legend-list,
 .layer-list {
   list-style: none;
   padding: 0;
@@ -138,12 +144,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.legend-list li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .legend-swatch {
@@ -227,6 +227,7 @@
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  color: #2D3748;
 }
 
 /* Analysis section */
@@ -300,30 +301,15 @@
 /* Responsive */
 @media (max-width: 768px) {
   .map-section {
-    flex-direction: column;
-    height: auto;
-  }
-
-  .map-container {
-    flex: none;
-    height: 45vh;
-  }
-
-  .map-container.sidebar-closed {
-    flex: none;
     height: 45vh;
   }
 
   .map-sidebar {
-    flex: none;
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid var(--border);
+    max-width: calc(100vw - 20px);
   }
 
-  .map-sidebar.closed {
-    flex-basis: auto;
-    height: 40px;
+  .sidebar-content {
+    max-height: calc(45vh - 44px);
   }
 
   .analysis-section {
@@ -348,5 +334,27 @@
     padding: 12px 20px;
     flex-direction: column;
     gap: 4px;
+  }
+
+  /* Chart: full width, fixed height */
+  .hydrological-chart .recharts-responsive-container {
+    height: 350px !important;
+  }
+
+  /* Axis tick labels: smaller font */
+  .hydrological-chart .recharts-cartesian-axis-tick text {
+    font-size: 10px !important;
+  }
+
+  /* Axis title labels */
+  .hydrological-chart .recharts-label {
+    font-size: 10px !important;
+  }
+
+  /* Legend: below chart, full width */
+  .hydrological-chart .recharts-legend-wrapper {
+    position: static !important;
+    width: 100% !important;
+    padding-top: 8px;
   }
 }
