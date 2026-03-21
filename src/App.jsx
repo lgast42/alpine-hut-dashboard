@@ -13,6 +13,30 @@ const LAYER_DEFS = [
   { key: 'pipeline',  label: 'Wasserleitung',                ids: ['pipeline'] },
 ]
 
+function AboutSection() {
+  const [open, setOpen] = useState(false)
+  return (
+    <section className="about-section">
+      <div className="about-inner">
+        <button
+          className={`about-toggle${open ? ' open' : ''}`}
+          onClick={() => setOpen(v => !v)}
+          aria-expanded={open}
+        >
+          Über dieses Projekt <span className="about-arrow">{open ? '▾' : '▸'}</span>
+        </button>
+        {open && (
+          <div className="about-content">
+            <p>Die Wasserversorgung hochalpiner Schutzhütten steht unter zunehmendem Druck. An der Neuen Prager Hütte (2796 m) ist der ehemalige Hausgletscher, das Schlatenkees, inzwischen über 1,5 km entfernt. Die Hütte musste 2023 und 2024 vorzeitig schließen.</p>
+            <p>Dieses Dashboard visualisiert Ergebnisse eines fernerkundungsbasierten Workflows, der die hydrologische Resilienz des Standorts quantitativ bewertet. Die Methodik ist als skalierbares Modell für weitere alpine Schutzhütten konzipiert.</p>
+            <p>Kontakt: Lucas Gasthauer · B.Sc. Geographie · Universität Innsbruck · Institut für Geographie</p>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768)
   const [layerVisible, setLayerVisible] = useState(
@@ -37,6 +61,21 @@ function App() {
           <span>Hohe Tauern</span>
         </div>
       </header>
+
+      <section className="kpi-section">
+        <div className="kpi-card">
+          <div className="kpi-value">2,10 ha</div>
+          <div className="kpi-desc">Modellierte Einzugsgebietsfläche</div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-value">&lt; 15% ab Juli</div>
+          <div className="kpi-desc">In allen Jahren seit 2022 · Sentinel-2 NDSI (2018–2025)</div>
+        </div>
+        <div className="kpi-card">
+          <div className="kpi-value">162–382 mm</div>
+          <div className="kpi-desc">Spannweite im August · Hohe Volatilität bei fehlenden Schneereserven</div>
+        </div>
+      </section>
 
       <section className="map-section">
         <div className="map-container">
@@ -98,6 +137,8 @@ function App() {
       <section className="scaling-section">
         <ScalingView />
       </section>
+
+      <AboutSection />
 
       <footer className="dashboard-footer">
         <div>
