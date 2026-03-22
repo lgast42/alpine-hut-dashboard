@@ -27,9 +27,7 @@ function AboutSection() {
         </button>
         {open && (
           <div className="about-content">
-            <p>Die Wasserversorgung hochalpiner Schutzhütten steht unter zunehmendem Druck. An der Neuen Prager Hütte (2796 m) ist der ehemalige Hausgletscher, das Schlatenkees, inzwischen über 1,5 km entfernt. Die Hütte musste 2023 und 2024 vorzeitig schließen.</p>
-            <p>Dieses Dashboard visualisiert Ergebnisse eines fernerkundungsbasierten Workflows, der die hydrologische Resilienz des Standorts quantitativ bewertet. Die Methodik ist als skalierbares Modell für weitere alpine Schutzhütten konzipiert.</p>
-            <p>Kontakt: Lucas Gasthauer · B.Sc. Geographie · Universität Innsbruck · Institut für Geographie</p>
+            <p>Die Wasserversorgung alpiner Schutzhütten wandelt sich von einem glazial gepufferten zu einem niederschlagsabhängigen System. Dieser Übergang betrifft nicht einzelne Standorte, sondern das alpine Stützpunktnetz insgesamt. Das vorliegende Dashboard demonstriert einen fernerkundungsbasierten Analyse-Workflow, der auf frei verfügbaren Geodaten aufbaut und die hydrologische Resilienz einzelner Hüttenstandorte quantitativ bewertet. Die Pilotanalyse an der Neuen Prager Hütte (2796 m) zeigt, wie Einzugsgebietsmodellierung, Schneebedeckungsanalyse und Niederschlagsdaten zu einem standortspezifischen Versorgungsprofil zusammengeführt werden können. Die Methodik ist auf weitere Standorte übertragbar und soll Alpenvereinen eine objektive Grundlage für die Priorisierung von Infrastrukturinvestitionen liefern.</p>
           </div>
         )}
       </div>
@@ -68,12 +66,14 @@ function App() {
           <div className="kpi-desc">Modellierte Einzugsgebietsfläche</div>
         </div>
         <div className="kpi-card">
-          <div className="kpi-value">&lt; 15% ab Juli</div>
-          <div className="kpi-desc">In allen Jahren seit 2022 · Sentinel-2 NDSI (2018–2025)</div>
+          <div className="kpi-label">Schneebedeckung</div>
+          <div className="kpi-value">—</div>
+          <div className="kpi-desc">Aktuelle Schneebedeckung im Einzugsgebiet · Daten folgen</div>
         </div>
         <div className="kpi-card">
-          <div className="kpi-value">162–382 mm</div>
-          <div className="kpi-desc">Spannweite im August · Hohe Volatilität bei fehlenden Schneereserven</div>
+          <div className="kpi-label">Niederschlag</div>
+          <div className="kpi-value">—</div>
+          <div className="kpi-desc">Letzter erfasster Monatsniederschlag · Daten folgen</div>
         </div>
       </section>
 
@@ -109,16 +109,6 @@ function App() {
               ))}
             </ul>
 
-            <hr className="sidebar-divider" />
-
-            <dl className="site-info">
-              <dt>Höhenbereich</dt>
-              <dd>2740–2900 m</dd>
-              <dt>Substrat</dt>
-              <dd>Blockschutt (periglazial)</dd>
-              <dt>Ehemaliger Gletscher</dt>
-              <dd>Schlatenkees (&gt;1,5 km entfernt)</dd>
-            </dl>
           </div>
         </aside>
       </section>
@@ -129,7 +119,7 @@ function App() {
           <HydrologicalChart />
         </div>
         <div className="table-panel">
-          <h2>Jahresvergleich 2018–2025</h2>
+          <h2>Datentabelle 2018–2025</h2>
           <AnnualTable />
         </div>
       </section>
@@ -154,10 +144,10 @@ function App() {
           <p>Zeitraum: Bewirtschaftungssaison Mai–September, 2018–2025</p>
         </div>
         <div>
-          <h4>Projekt</h4>
+          <h4>Ersteller</h4>
           <p>Lucas Gasthauer · B.Sc. Geographie</p>
           <p>Universität Innsbruck · Institut für Geographie</p>
-          <p>Kurs: Methoden der Datenerfassung · WiSe 25/26</p>
+          <p>Kontakt: lucas.gasthauer@student.uibk.ac.at</p>
         </div>
       </footer>
     </div>

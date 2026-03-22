@@ -42,10 +42,7 @@ export default function AnnualTable() {
 
   return (
     <div>
-      <h3 style={{ fontSize: 16, fontWeight: 600, color: '#2D3748', margin: '0 0 4px' }}>
-        Ab 2022: Schnee spielt im Juli keine Rolle mehr für die Wasserversorgung
-      </h3>
-      <p style={{ fontSize: 13, color: '#718096', margin: '0 0 16px' }}>
+      <p style={{ margin: '0 0 12px', fontSize: 13, color: '#718096' }}>
         Monatliche Werte · '—' = keine Daten (Wolkenbedeckung bei Sentinel-2)
       </p>
 

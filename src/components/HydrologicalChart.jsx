@@ -43,13 +43,13 @@ function CustomTooltip({ active, payload, label }) {
     }}>
       <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#2D3748' }}>{label}</p>
       <p style={{ margin: 0, color: '#3182CE' }}>
-        Precipitation: <strong>{d.precipitation} mm</strong>
+        Niederschlag: <strong>{d.precipitation} mm</strong>
         <span style={{ color: '#718096', fontWeight: 400 }}>
           {' '}({d.precipMin} mm – {d.precipMax} mm)
         </span>
       </p>
-      <p style={{ margin: 0, color: '#2B6CB0' }}>
-        Snow Cover: <strong>{d.snow}%</strong>
+      <p style={{ margin: 0, color: '#4A5568' }}>
+        Schneebedeckung: <strong>{d.snow}%</strong>
         <span style={{ color: '#718096', fontWeight: 400 }}>
           {' '}({d.snowMin}% – {d.snowMax}%)
         </span>
@@ -61,22 +61,7 @@ function CustomTooltip({ active, payload, label }) {
 export default function HydrologicalChart() {
   return (
     <div className="hydrological-chart" style={{ width: '100%' }}>
-      <h3 style={{
-        textAlign: 'left',
-        fontSize: 16,
-        fontWeight: 600,
-        color: '#2D3748',
-        margin: '0 0 4px',
-        lineHeight: 1.4,
-      }}>
-        Schneebedeckung sinkt bis Juli auf unter 30 % — der Versorgungspuffer schwindet
-      </h3>
-      <p style={{
-        margin: '0 0 16px',
-        fontSize: 13,
-        color: '#718096',
-        lineHeight: 1.4,
-      }}>
+      <p style={{ margin: '0 0 12px', fontSize: 13, color: '#718096' }}>
         Monatsmittelwerte der Bewirtschaftungssaison · Streuung 2018–2025
       </p>
 
@@ -103,7 +88,7 @@ export default function HydrologicalChart() {
             axisLine={false}
             tickLine={false}
             label={{
-              value: 'Precipitation (mm)',
+              value: 'Niederschlag (mm)',
               angle: -90,
               position: 'insideLeft',
               offset: -32,
@@ -122,7 +107,7 @@ export default function HydrologicalChart() {
             tickLine={false}
             tickFormatter={(v) => `${v}%`}
             label={{
-              value: 'Snow Cover (%)',
+              value: 'Schneebedeckung (%)',
               angle: 90,
               position: 'insideRight',
               offset: -32,
@@ -153,7 +138,7 @@ export default function HydrologicalChart() {
           <Bar
             yAxisId="left"
             dataKey="precipitation"
-            name="Precipitation (mm)"
+            name="Mittlerer Niederschlag (mm)"
             fill="#3182CE"
             fillOpacity={0.8}
             barSize={40}
@@ -173,7 +158,7 @@ export default function HydrologicalChart() {
             yAxisId="right"
             dataKey="snowRange"
             name="_snowRange"
-            fill="#BEE3F8"
+            fill="#CBD5E0"
             stroke="none"
             fillOpacity={0.45}
             legendType="none"
@@ -186,10 +171,10 @@ export default function HydrologicalChart() {
           <Line
             yAxisId="right"
             dataKey="snow"
-            name="Snow Cover (%)"
-            stroke="#2B6CB0"
+            name="Mittlere Schneebedeckung (%)"
+            stroke="#4A5568"
             strokeWidth={3}
-            dot={{ r: 5, fill: '#2B6CB0', strokeWidth: 0 }}
+            dot={{ r: 5, fill: '#4A5568', strokeWidth: 0 }}
             activeDot={{ r: 7 }}
           />
 

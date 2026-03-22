@@ -37,9 +37,6 @@ export default function ScalingView() {
         ))}
       </div>
 
-      <p style={{ fontSize: 12, color: '#A0AEC0', fontStyle: 'italic', margin: '24px 0 0' }}>
-        Kontakt: Lucas Gasthauer · Universität Innsbruck · Institut für Geographie
-      </p>
     </div>
   )
 }
