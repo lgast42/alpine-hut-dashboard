@@ -12,6 +12,14 @@ const LAYER_DEFS = [
   { key: 'pipeline',  label: 'Wasserleitung',      ids: ['pipeline'] },
 ]
 
+const CATEGORIES = [
+  { id: 'combined', label: 'Kombiniert' },
+  { id: 'snow',     label: 'Schnee'     },
+  { id: 'precip',   label: 'Nied.'      },
+]
+
+const YEAR_OPTIONS = ['all', 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+
 function applyMapPadding(map) {
   const mobile = window.innerWidth < 768
   map.setPadding(mobile
@@ -29,6 +37,15 @@ export default function App() {
   const [layerVisible, setLayerVisible] = useState(
     Object.fromEntries(LAYER_DEFS.map(l => [l.key, true]))
   )
+
+  // ── Data-panel state ───────────────────────────────────────
+  const [viewMode,         setViewMode]         = useState('chart')         // 'chart' | 'table'
+  const [activeCategory,   setActiveCategory]   = useState('combined')      // 'combined' | 'snow' | 'precip'
+  const [selectedYear,     setSelectedYear]     = useState('all')           // 'all' | 2018..2025
+  const [activeDataDetail, setActiveDataDetail] = useState(null)            // clicked data point
+
+  // Reset drill-down selection whenever the filter axes change
+  useEffect(() => { setActiveDataDetail(null) }, [activeCategory, selectedYear])
 
   const mapRef          = useRef(null)
   const layerVisibleRef = useRef(layerVisible)
@@ -204,29 +221,116 @@ export default function App() {
 
           {/* DATA PANE */}
           <div className="data-pane">
+
+            {/* ── Data pane header ─────────────────────────── */}
             <div className="data-pane-header">
-              <h2>Hydrologische Analyse · 2018–2025</h2>
-              <button className="data-expand-btn" onClick={toggleDataExpand}>
-                {dataExpanded ? '↕ Teilen' : '↑ Maximieren'}
-              </button>
-            </div>
-            <div className="data-pane-inner">
-              <div className="data-section">
-                <p className="panel-heading">Hydrologischer Fingerabdruck</p>
-                <HydrologicalChart />
+
+              {/* Title row */}
+              <div className="data-header-row">
+                <h2>Hydrologische Analyse · 2018–2025</h2>
+                <button className="data-expand-btn" onClick={toggleDataExpand}>
+                  {dataExpanded ? '↕ Teilen' : '↑ Maximieren'}
+                </button>
               </div>
-              <div className="data-section">
-                <p className="panel-heading">Sentinel-2 Einzelszenen · 2018–2025</p>
-                <SnowTimeSeriesChart />
-              </div>
-              <div className="data-section">
-                <p className="panel-heading">Datentabelle 2018–2025</p>
-                <div className="annual-table-wrapper">
-                  <AnnualTable />
+
+              {/* Control bar */}
+              <div className="data-controls">
+
+                {/* Top row: view toggle + category pills */}
+                <div className="data-controls-top">
+
+                  {/* View toggle */}
+                  <div className="ctrl-seg" role="group" aria-label="Ansicht">
+                    <button
+                      className={`ctrl-seg-btn${viewMode === 'chart' ? ' ctrl-seg-btn--active' : ''}`}
+                      aria-pressed={viewMode === 'chart'}
+                      onClick={() => setViewMode('chart')}
+                    >
+                      Graph
+                    </button>
+                    <button
+                      className={`ctrl-seg-btn${viewMode === 'table' ? ' ctrl-seg-btn--active' : ''}`}
+                      aria-pressed={viewMode === 'table'}
+                      onClick={() => setViewMode('table')}
+                    >
+                      Tabelle
+                    </button>
+                  </div>
+
+                  {/* Category filter */}
+                  <div className="ctrl-pills" role="group" aria-label="Kategorie">
+                    {CATEGORIES.map(c => (
+                      <button
+                        key={c.id}
+                        className={`ctrl-pill${activeCategory === c.id ? ' ctrl-pill--active' : ''}`}
+                        aria-pressed={activeCategory === c.id}
+                        onClick={() => setActiveCategory(c.id)}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+
+                </div>{/* /data-controls-top */}
+
+                {/* Year strip — scrolls horizontally on narrow screens */}
+                <div className="year-strip" role="group" aria-label="Jahresauswahl">
+                  {YEAR_OPTIONS.map(y => (
+                    <button
+                      key={y}
+                      className={`year-pill${selectedYear === y ? ' year-pill--active' : ''}`}
+                      aria-pressed={selectedYear === y}
+                      onClick={() => setSelectedYear(y)}
+                    >
+                      {y === 'all' ? 'Alle' : y}
+                    </button>
+                  ))}
                 </div>
-              </div>
-            </div>
-          </div>
+
+              </div>{/* /data-controls */}
+            </div>{/* /data-pane-header */}
+
+            {/* ── Data pane content ────────────────────────── */}
+            <div className="data-pane-inner">
+
+              {viewMode === 'chart' && (
+                <>
+                  <div className="data-section">
+                    <p className="panel-heading">Hydrologischer Fingerabdruck</p>
+                    <HydrologicalChart
+                      activeCategory={activeCategory}
+                      selectedYear={selectedYear}
+                      activeDataDetail={activeDataDetail}
+                      onPointClick={setActiveDataDetail}
+                    />
+                  </div>
+                  <div className="data-section">
+                    <p className="panel-heading">Sentinel-2 Einzelszenen · 2018–2025</p>
+                    <SnowTimeSeriesChart
+                      selectedYear={selectedYear}
+                      activeDataDetail={activeDataDetail}
+                      onDataDetailChange={setActiveDataDetail}
+                    />
+                  </div>
+                </>
+              )}
+
+              {viewMode === 'table' && (
+                <div className="data-section data-section--full">
+                  <p className="panel-heading">Datentabelle 2018–2025</p>
+                  <div className="annual-table-wrapper">
+                    <AnnualTable
+                      activeCategory={activeCategory}
+                      selectedYear={selectedYear}
+                      activeDataDetail={activeDataDetail}
+                      onDataDetailChange={setActiveDataDetail}
+                    />
+                  </div>
+                </div>
+              )}
+
+            </div>{/* /data-pane-inner */}
+          </div>{/* /data-pane */}
 
         </div>
       </div>

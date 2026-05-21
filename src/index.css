@@ -524,10 +524,16 @@ body {
 .data-pane-header {
   flex: 0 0 auto;
   display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Title row: h2 + expand button */
+.data-header-row {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 6px 14px;
-  border-bottom: 1px solid var(--border);
   gap: 8px;
 }
 
@@ -624,28 +630,184 @@ body {
   color: var(--text-2) !important;
 }
 
+/* ── Data Panel Controls ─────────────────────────────────── */
+
+/* Outer control bar */
+.data-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 5px 14px 7px;
+  border-top: 1px solid var(--border);
+}
+
+/* Top row: view toggle + category pills (scrolls on very small screens) */
+.data-controls-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.data-controls-top::-webkit-scrollbar { display: none; }
+
+/* On desktop: everything in one row */
+@media (min-width: 768px) {
+  .data-controls {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 14px 6px;
+  }
+  .data-controls-top { overflow: visible; }
+}
+
+/* ── Segmented view toggle (Graph | Tabelle) ─────────────── */
+.ctrl-seg {
+  display: inline-flex;
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ctrl-seg-btn {
+  padding: 3px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-3);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color var(--t), background var(--t);
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+.ctrl-seg-btn + .ctrl-seg-btn {
+  border-left: 1px solid var(--border);
+}
+
+.ctrl-seg-btn--active {
+  color: var(--text-1);
+  background: var(--accent-dim);
+}
+
+.ctrl-seg-btn:hover:not(.ctrl-seg-btn--active) {
+  color: var(--text-2);
+  background: var(--surface-2);
+}
+
+/* ── Category pill buttons ───────────────────────────────── */
+.ctrl-pills {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 3px;
+}
+
+.ctrl-pill {
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color var(--t), background var(--t), border-color var(--t);
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+.ctrl-pill--active {
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.ctrl-pill:hover:not(.ctrl-pill--active) {
+  color: var(--text-2);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* ── Year pill strip (horizontally scrollable) ───────────── */
+.year-strip {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.year-strip::-webkit-scrollbar { display: none; }
+
+@media (min-width: 768px) {
+  .year-strip {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.year-pill {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color var(--t), background var(--t), border-color var(--t);
+  white-space: nowrap;
+  line-height: 1.6;
+}
+
+.year-pill--active {
+  color: var(--text-1);
+  background: var(--surface-2);
+  border-color: var(--border-2);
+}
+
+.year-pill:hover:not(.year-pill--active) {
+  color: var(--text-2);
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+/* Full-width data section (used in table view) */
+.data-section--full {
+  grid-column: 1 / -1;
+}
+
 /* ── Scrollbar ───────────────────────────────────────────── */
 ::-webkit-scrollbar          { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track    { background: transparent; }
 ::-webkit-scrollbar-thumb    { background: var(--border); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-2); }
 
-/* ── Chart: legacy class from HydrologicalChart ──────────── */
-.hydrological-chart .recharts-responsive-container {
-  /* let the container fill available space */
+/* ── HydrologicalChart wrapper ───────────────────────────── */
+.hydro-chart-wrap {
+  height: 340px;
 }
 
 @media (max-width: 767px) {
-  .hydrological-chart .recharts-responsive-container {
-    height: 280px !important;
+  .hydro-chart-wrap {
+    height: 260px;
   }
-  .hydrological-chart .recharts-cartesian-axis-tick text {
+  .hydro-chart-wrap .recharts-cartesian-axis-tick text {
     font-size: 10px !important;
   }
-  .hydrological-chart .recharts-label {
+  .hydro-chart-wrap .recharts-label {
     font-size: 10px !important;
   }
-  .hydrological-chart .recharts-legend-wrapper {
+  .hydro-chart-wrap .recharts-legend-wrapper {
     position: static !important;
     width: 100% !important;
     padding-top: 8px;
