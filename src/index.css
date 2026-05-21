@@ -1,18 +1,653 @@
+/* ════════════════════════════════════════════════════════
+   ALPINE HUT DASHBOARD — Dark Glassmorphism Theme
+   ════════════════════════════════════════════════════════ */
+
+/* ── CSS Variables ─────────────────────────────────────── */
 :root {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Backgrounds */
+  --bg:          #0d1117;
+  --surface:     rgba(255, 255, 255, 0.05);
+  --surface-2:   rgba(255, 255, 255, 0.09);
+  --glass:       rgba(13, 17, 23, 0.72);
+  --glass-light: rgba(30, 38, 52, 0.85);
+
+  /* Borders */
+  --border:      rgba(255, 255, 255, 0.10);
+  --border-2:    rgba(255, 255, 255, 0.16);
+
+  /* Text */
+  --text-1:      #e2e8f0;
+  --text-2:      #94a3b8;
+  --text-3:      #64748b;
+
+  /* Accent */
+  --accent:      #3b82f6;
+  --accent-dim:  rgba(59, 130, 246, 0.18);
+
+  /* Blur */
+  --blur:        blur(16px) saturate(1.5);
+  --blur-sm:     blur(8px)  saturate(1.3);
+
+  /* Shadows */
+  --shadow-lg:   0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-md:   0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-sm:   0 2px  8px rgba(0, 0, 0, 0.3);
+
+  /* Layout */
+  --header-h:        52px;
+  --side-w:          256px;
+  --side-w-closed:   40px;
+  --radius:          12px;
+  --radius-sm:        8px;
+  --radius-xs:        6px;
+
+  /* Transitions */
+  --t:  0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --t-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
 }
 
 body {
-  margin: 0;
-  background: #F7FAFC;
-  color: #2D3748;
+  background: var(--bg);
+  color: var(--text-1);
+  overflow: hidden;    /* no page scroll; panels scroll internally */
 }
 
 #root {
-  max-width: 100%;
+  height: 100%;
   width: 100%;
+}
+
+/* ── App Shell ─────────────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── Header ─────────────────────────────────────────────── */
+.app-header {
+  flex: 0 0 var(--header-h);
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px 0 20px;
+  background: var(--glass);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.header-title {
+  min-width: 0;
+}
+
+.header-title h1 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.header-subtitle {
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.header-badge {
+  flex: 0 0 auto;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ── Main Layout ─────────────────────────────────────────── */
+.main-layout {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Desktop Sidepanel ──────────────────────────────────── */
+.sidepanel {
+  display: none;   /* hidden on mobile — show on desktop via media query */
+}
+
+@media (min-width: 768px) {
+  .sidepanel {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 var(--side-w);
+    width: var(--side-w);
+    background: var(--glass-light);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+    transition: width var(--t-slow), flex-basis var(--t-slow);
+    z-index: 20;
+  }
+
+  .sidepanel.closed {
+    flex-basis: var(--side-w-closed);
+    width: var(--side-w-closed);
+  }
+
+  .sidepanel.closed .sidepanel-content,
+  .sidepanel.closed .sidepanel-title {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.sidepanel-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 10px 10px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+  min-height: 40px;
+}
+
+.sidepanel-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: opacity var(--t);
+}
+
+.side-toggle {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 11px;
+  transition: background var(--t), color var(--t);
+  margin-left: auto;
+}
+
+.side-toggle:hover {
+  background: var(--surface-2);
+  color: var(--text-1);
+}
+
+.sidepanel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity var(--t);
+}
+
+/* ── KPI Glass Cards ─────────────────────────────────────── */
+.kpi-glass-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-variant-numeric: tabular-nums;
+  transition: background var(--t), border-color var(--t);
+}
+
+.kpi-glass-card:hover {
+  background: var(--surface-2);
+  border-color: var(--border-2);
+}
+
+.kpi-glass-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+
+.kpi-glass-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-1);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 2px;
+}
+
+.kpi-glass-sub {
+  font-size: 10px;
+  color: var(--text-2);
+}
+
+/* ── Layer Legend (inside sidepanel) ─────────────────────── */
+.layer-legend {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.legend-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  transition: color var(--t);
+  border-bottom: 1px solid transparent;
+}
+
+.legend-toggle-btn:hover { color: var(--text-1); }
+.layer-legend.open .legend-toggle-btn { border-bottom-color: var(--border); }
+
+.legend-list {
+  list-style: none;
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.legend-list li label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 12px;
+  transition: color var(--t);
+  user-select: none;
+}
+
+.legend-list li label:hover { color: var(--text-1); }
+.legend-list li label input[type="checkbox"] { accent-color: var(--accent); }
+
+/* Legend swatches */
+.legend-swatch {
+  display: inline-flex;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  border-radius: 3px;
+}
+.legend-swatch.hut       { background: #E53E3E; border-radius: 50%; }
+.legend-swatch.intake    { background: #2B6CB0; border-radius: 50%; outline: 2px solid rgba(255,255,255,0.3); }
+.legend-swatch.catchment { background: rgba(49,130,206,0.35); border: 2px dashed #2B6CB0; }
+.legend-swatch.flow      { align-self: center; height: 3px; border-radius: 999px; background: #00BCD4; }
+.legend-swatch.pipeline  { align-self: center; height: 2px; border-radius: 999px; background: repeating-linear-gradient(to right, #2B6CB0 0, #2B6CB0 6px, transparent 6px, transparent 9px); }
+
+/* ── About Accordion (inside sidepanel) ─────────────────── */
+.about-accordion {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.about-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 10px;
+  font-weight: 700;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  transition: color var(--t);
+}
+.about-toggle:hover { color: var(--text-1); }
+.about-accordion.open .about-toggle { border-bottom-color: var(--border); }
+
+.about-text {
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.65;
+  color: var(--text-2);
+}
+
+/* ── Content Column ──────────────────────────────────────── */
+.content-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Map Pane ────────────────────────────────────────────── */
+.map-pane {
+  position: relative;
+  flex: 3 1 0;          /* ~60% of content-col height */
+  min-height: 0;
+  overflow: hidden;
+  transition: flex var(--t-slow);
+}
+
+/* ── Data Pane ───────────────────────────────────────────── */
+.data-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 2 1 0;          /* ~40% of content-col height */
+  min-height: 0;
+  overflow: hidden;
+  background: var(--glass-light);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-top: 1px solid var(--border);
+  transition: flex var(--t-slow);
+}
+
+/* ── Collapsed / Expanded Layout States ─────────────────── */
+/* Map maximized → data pane collapses to 0 */
+.layout--map .map-pane  { flex: 1 1 auto; }
+.layout--map .data-pane { flex: 0 0 0; overflow: hidden; border-top: none; }
+
+/* Data maximized → map pane collapses to 0 */
+.layout--data .map-pane  { flex: 0 0 0; overflow: hidden; }
+.layout--data .data-pane { flex: 1 1 auto; }
+
+/* ── Pane Divider (bottom of map pane) ──────────────────── */
+.pane-divider {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  z-index: 10;
+  padding: 0 12px;
+  /* fade from transparent at top to dark at bottom */
+  background: linear-gradient(to bottom, transparent, rgba(13, 17, 23, 0.65));
+  pointer-events: none;
+}
+
+.pane-btn {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-1);
+  background: rgba(13, 17, 23, 0.70);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  border: 1px solid var(--border-2);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.pane-btn:hover {
+  background: rgba(30, 40, 60, 0.85);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Map overlays (mobile) ───────────────────────────────── */
+
+/* KPI cards overlay — top-left of map, mobile only */
+.kpi-map-overlay {
+  position: absolute;
+  top: 50px;     /* below Mapbox style buttons (top: 10px) */
+  left: 8px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 190px;
+  pointer-events: none;
+}
+
+.kpi-map-overlay .kpi-glass-card {
+  pointer-events: auto;
+  background: rgba(13, 17, 23, 0.78);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  padding: 8px 11px;
+}
+
+.kpi-map-overlay .kpi-glass-value { font-size: 17px; }
+.kpi-map-overlay .kpi-glass-sub   { display: none; } /* too cramped on mobile */
+
+/* Layer legend overlay — top-right of map, mobile only */
+.map-legend-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  background: rgba(13, 17, 23, 0.80);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  max-width: 220px;
+}
+
+.map-legend-overlay .legend-toggle-btn {
+  font-size: 10px;
+}
+
+.map-legend-overlay .legend-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* Show mobile overlays only below breakpoint */
+@media (min-width: 768px) {
+  .kpi-map-overlay    { display: none; }
+  .map-legend-overlay { display: none; }
+}
+
+/* ── Data Pane Header ────────────────────────────────────── */
+.data-pane-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+
+.data-pane-header h2 {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.data-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: background var(--t), color var(--t), border-color var(--t);
+  white-space: nowrap;
+}
+
+.data-expand-btn:hover {
+  color: var(--text-1);
+  background: var(--surface-2);
+  border-color: var(--border-2);
+}
+
+/* ── Data Pane Inner Content ─────────────────────────────── */
+.data-pane-inner {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .data-pane-inner {
+    display: grid;
+    grid-template-columns: 55fr 45fr;
+    gap: 20px;
+    align-items: start;
+    padding: 16px 20px 20px;
+  }
+}
+
+.data-section {}
+
+.panel-heading {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-2);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── Recharts Dark Overrides ─────────────────────────────── */
+.recharts-cartesian-axis-tick-value,
+.recharts-legend-item-text {
+  fill: var(--text-2) !important;
+  color: var(--text-2) !important;
+}
+
+.recharts-label {
+  fill: var(--text-3) !important;
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgba(255, 255, 255, 0.07) !important;
+}
+
+.recharts-default-tooltip {
+  background: rgba(13, 17, 23, 0.92) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+/* ── AnnualTable Dark Overrides ──────────────────────────── */
+.annual-table-wrapper p {
+  color: var(--text-2) !important;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 4px; height: 4px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-2); }
+
+/* ── Chart: legacy class from HydrologicalChart ──────────── */
+.hydrological-chart .recharts-responsive-container {
+  /* let the container fill available space */
+}
+
+@media (max-width: 767px) {
+  .hydrological-chart .recharts-responsive-container {
+    height: 280px !important;
+  }
+  .hydrological-chart .recharts-cartesian-axis-tick text {
+    font-size: 10px !important;
+  }
+  .hydrological-chart .recharts-label {
+    font-size: 10px !important;
+  }
+  .hydrological-chart .recharts-legend-wrapper {
+    position: static !important;
+    width: 100% !important;
+    padding-top: 8px;
+  }
 }
