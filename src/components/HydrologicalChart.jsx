@@ -16,6 +16,23 @@ import { monthlyAverages, varianceData } from '../data/hydrologicalData';
 
 const MONO = "'IBM Plex Mono', monospace";
 
+// Dark-theme palette
+const C = {
+  grid:        'rgba(255,255,255,0.07)',
+  axis:        'rgba(255,255,255,0.15)',
+  textMuted:   '#94a3b8',
+  textPrimary: '#e2e8f0',
+  precip:      '#3b82f6',
+  precipDark:  '#2563eb',
+  snow:        '#67e8f9',
+  snowRange:   'rgba(103,232,249,0.15)',
+  vulnFill:    'rgba(252,165,165,0.12)',
+  vulnStroke:  'rgba(248,113,113,0.40)',
+  vulnLabel:   '#fca5a5',
+  tooltipBg:   'rgba(13,17,23,0.94)',
+  tooltipBord: 'rgba(255,255,255,0.12)',
+};
+
 const chartData = monthlyAverages.map((m, i) => ({
   ...m,
   ...varianceData[i],
@@ -34,24 +51,25 @@ function CustomTooltip({ active, payload, label }) {
 
   return (
     <div style={{
-      background: '#fff',
-      border: '1px solid #CBD5E0',
-      borderRadius: 4,
+      background: C.tooltipBg,
+      border: `1px solid ${C.tooltipBord}`,
+      borderRadius: 6,
       padding: '10px 14px',
       fontSize: 13,
-      lineHeight: 1.6,
+      lineHeight: 1.7,
+      backdropFilter: 'blur(8px)',
     }}>
-      <p style={{ margin: '0 0 6px', fontWeight: 600, color: '#2D3748' }}>{label}</p>
-      <p style={{ margin: 0, color: '#3182CE' }}>
+      <p style={{ margin: '0 0 6px', fontWeight: 600, color: C.textPrimary }}>{label}</p>
+      <p style={{ margin: 0, color: C.precip }}>
         Niederschlag: <strong>{d.precipitation} mm</strong>
-        <span style={{ color: '#718096', fontWeight: 400 }}>
-          {' '}({d.precipMin} mm – {d.precipMax} mm)
+        <span style={{ color: C.textMuted, fontWeight: 400 }}>
+          {' '}({d.precipMin}–{d.precipMax} mm)
         </span>
       </p>
-      <p style={{ margin: 0, color: '#4A5568' }}>
-        Schneebedeckung: <strong>{d.snow}%</strong>
-        <span style={{ color: '#718096', fontWeight: 400 }}>
-          {' '}({d.snowMin}% – {d.snowMax}%)
+      <p style={{ margin: 0, color: C.snow }}>
+        Schneebedeckung: <strong>{d.snow !== null ? `${d.snow}%` : '—'}</strong>
+        <span style={{ color: C.textMuted, fontWeight: 400 }}>
+          {' '}({d.snowMin}%–{d.snowMax}%)
         </span>
       </p>
     </div>
@@ -61,7 +79,7 @@ function CustomTooltip({ active, payload, label }) {
 export default function HydrologicalChart() {
   return (
     <div className="hydrological-chart" style={{ width: '100%' }}>
-      <p style={{ margin: '0 0 12px', fontSize: 13, color: '#718096' }}>
+      <p style={{ margin: '0 0 12px', fontSize: 13, color: C.textMuted }}>
         Monatsmittelwerte der Bewirtschaftungssaison · Streuung 2018–2025
       </p>
 
@@ -70,12 +88,12 @@ export default function HydrologicalChart() {
           data={chartData}
           margin={{ top: 10, right: 48, bottom: 8, left: 48 }}
         >
-          <CartesianGrid strokeDasharray="4 4" stroke="#E2E8F0" vertical={false} />
+          <CartesianGrid strokeDasharray="4 4" stroke={C.grid} vertical={false} />
 
           <XAxis
             dataKey="month"
-            tick={{ fill: '#4A5568', fontSize: 13, fontFamily: MONO }}
-            axisLine={{ stroke: '#CBD5E0' }}
+            tick={{ fill: C.textMuted, fontSize: 13, fontFamily: MONO }}
+            axisLine={{ stroke: C.axis }}
             tickLine={false}
           />
 
@@ -84,7 +102,7 @@ export default function HydrologicalChart() {
             yAxisId="left"
             domain={[0, 500]}
             tickCount={6}
-            tick={{ fill: '#2B6CB0', fontSize: 12, fontFamily: MONO }}
+            tick={{ fill: C.precip, fontSize: 12, fontFamily: MONO }}
             axisLine={false}
             tickLine={false}
             label={{
@@ -92,7 +110,7 @@ export default function HydrologicalChart() {
               angle: -90,
               position: 'insideLeft',
               offset: -32,
-              style: { fill: '#2B6CB0', fontSize: 12, fontFamily: MONO },
+              style: { fill: C.precip, fontSize: 12, fontFamily: MONO },
             }}
           />
 
@@ -102,7 +120,7 @@ export default function HydrologicalChart() {
             orientation="right"
             domain={[0, 100]}
             tickCount={6}
-            tick={{ fill: '#4A5568', fontSize: 12, fontFamily: MONO }}
+            tick={{ fill: C.snow, fontSize: 12, fontFamily: MONO }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => `${v}%`}
@@ -111,7 +129,7 @@ export default function HydrologicalChart() {
               angle: 90,
               position: 'insideRight',
               offset: -32,
-              style: { fill: '#4A5568', fontSize: 12, fontFamily: MONO },
+              style: { fill: C.snow, fontSize: 12, fontFamily: MONO },
             }}
           />
 
@@ -120,15 +138,13 @@ export default function HydrologicalChart() {
             yAxisId="left"
             x1="Jul"
             x2="Sep"
-            fill="#FEB2B2"
-            fillOpacity={0.18}
-            stroke="#FC8181"
-            strokeOpacity={0.4}
+            fill={C.vulnFill}
+            stroke={C.vulnStroke}
             strokeDasharray="4 3"
             label={{
               value: 'Vulnerabilitätsphase',
               position: 'insideTopRight',
-              fill: '#C53030',
+              fill: C.vulnLabel,
               fontSize: 11,
               fontStyle: 'italic',
             }}
@@ -139,8 +155,8 @@ export default function HydrologicalChart() {
             yAxisId="left"
             dataKey="precipitation"
             name="Mittlerer Niederschlag (mm)"
-            fill="#3182CE"
-            fillOpacity={0.8}
+            fill={C.precip}
+            fillOpacity={0.75}
             barSize={40}
             radius={[2, 2, 0, 0]}
           >
@@ -148,7 +164,7 @@ export default function HydrologicalChart() {
               dataKey="precipError"
               width={5}
               strokeWidth={1.5}
-              stroke="#2B6CB0"
+              stroke={C.precipDark}
               direction="y"
             />
           </Bar>
@@ -158,9 +174,9 @@ export default function HydrologicalChart() {
             yAxisId="right"
             dataKey="snowRange"
             name="_snowRange"
-            fill="#CBD5E0"
+            fill={C.snowRange}
             stroke="none"
-            fillOpacity={0.45}
+            fillOpacity={1}
             legendType="none"
             tooltipType="none"
             activeDot={false}
@@ -172,9 +188,9 @@ export default function HydrologicalChart() {
             yAxisId="right"
             dataKey="snow"
             name="Mittlere Schneebedeckung (%)"
-            stroke="#4A5568"
-            strokeWidth={3}
-            dot={{ r: 5, fill: '#4A5568', strokeWidth: 0 }}
+            stroke={C.snow}
+            strokeWidth={2.5}
+            dot={{ r: 5, fill: C.snow, strokeWidth: 0 }}
             activeDot={{ r: 7 }}
           />
 
@@ -184,7 +200,7 @@ export default function HydrologicalChart() {
             verticalAlign="bottom"
             align="center"
             iconType="square"
-            wrapperStyle={{ paddingTop: 16, fontSize: 13, color: '#4A5568' }}
+            wrapperStyle={{ paddingTop: 16, fontSize: 13, color: C.textMuted }}
             formatter={(value) => value.startsWith('_') ? null : value}
           />
         </ComposedChart>

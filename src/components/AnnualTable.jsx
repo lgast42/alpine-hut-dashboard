@@ -9,13 +9,14 @@ const MONTHS = [
   { key: 'sep', label: 'Sep' },
 ]
 
+// Snow-cover heat-map colours tuned for dark background
 function snowColor(snow) {
-  if (snow === null) return { bg: '#F7FAFC', color: '#CBD5E0' }
-  if (snow >= 80)   return { bg: '#2B6CB0', color: '#FFFFFF' }
-  if (snow >= 50)   return { bg: '#63B3ED', color: '#2D3748' }
-  if (snow >= 20)   return { bg: '#BEE3F8', color: '#2D3748' }
-  if (snow >= 5)    return { bg: '#FED7D7', color: '#2D3748' }
-  return                   { bg: '#FC8181', color: '#2D3748' }
+  if (snow === null) return { bg: 'rgba(255,255,255,0.04)', color: '#475569' }
+  if (snow >= 80)   return { bg: '#1d4ed8',                color: '#dbeafe' }
+  if (snow >= 50)   return { bg: '#2563eb',                color: '#bfdbfe' }
+  if (snow >= 20)   return { bg: '#1e40af',                color: '#93c5fd' }
+  if (snow >= 5)    return { bg: '#7c2d12',                color: '#fed7aa' }
+  return                   { bg: '#991b1b',                color: '#fecaca' }
 }
 
 export default function AnnualTable() {
@@ -23,7 +24,7 @@ export default function AnnualTable() {
 
   const cellBase = {
     padding: '8px 10px',
-    border: '1px solid #E2E8F0',
+    border: '1px solid rgba(255,255,255,0.08)',
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: 13,
     textAlign: 'right',
@@ -33,16 +34,17 @@ export default function AnnualTable() {
   const headerCell = {
     fontFamily: "'IBM Plex Mono', monospace",
     fontSize: 12,
-    color: '#718096',
+    color: '#94a3b8',
     padding: '8px 10px',
-    borderBottom: '2px solid #E2E8F0',
+    borderBottom: '2px solid rgba(255,255,255,0.12)',
     textAlign: 'right',
     whiteSpace: 'nowrap',
+    background: 'transparent',
   }
 
   return (
     <div>
-      <p style={{ margin: '0 0 12px', fontSize: 13, color: '#718096' }}>
+      <p style={{ margin: '0 0 12px', fontSize: 13, color: '#94a3b8' }}>
         Monatliche Werte · '—' = keine Daten (Wolkenbedeckung bei Sentinel-2)
       </p>
 
@@ -69,8 +71,8 @@ export default function AnnualTable() {
                     ...cellBase,
                     textAlign: 'left',
                     fontWeight: 600,
-                    color: '#2D3748',
-                    background: isHovered ? '#EBF8FF' : 'white',
+                    color: '#e2e8f0',
+                    background: isHovered ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.03)',
                   }}>
                     {row.year}
                   </td>

@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import Map from './components/Map'
 import HydrologicalChart from './components/HydrologicalChart'
+import SnowTimeSeriesChart from './components/SnowTimeSeriesChart'
 import AnnualTable from './components/AnnualTable'
-import { monthlyAverages } from './data/hydrologicalData'
-
-const julStats = monthlyAverages.find(m => m.month === 'Jul')
 
 const LAYER_DEFS = [
   { key: 'hut',       label: 'Neue Prager Hütte', ids: ['hut'] },
@@ -122,22 +120,6 @@ export default function App() {
           </div>
 
           <div className="sidepanel-content">
-            <div className="kpi-glass-card">
-              <div className="kpi-glass-label">Einzugsgebiet</div>
-              <div className="kpi-glass-value">2,10 ha</div>
-              <div className="kpi-glass-sub">modelliert · DGM 0,5 m</div>
-            </div>
-            <div className="kpi-glass-card">
-              <div className="kpi-glass-label">Schneebedeckung Median Juli</div>
-              <div className="kpi-glass-value">{julStats.snow} %</div>
-              <div className="kpi-glass-sub">2018–2025 · Sentinel-2 NDSI</div>
-            </div>
-            <div className="kpi-glass-card">
-              <div className="kpi-glass-label">Niederschlag Mittel Juli</div>
-              <div className="kpi-glass-value">{julStats.precipitation} mm</div>
-              <div className="kpi-glass-sub">2018–2025 · SPARTACUS v2.1</div>
-            </div>
-
             <div className={`layer-legend ${legendOpen ? 'open' : ''}`}>
               <button className="legend-toggle-btn" onClick={() => setLegendOpen(v => !v)}>
                 <span>Kartenebenen</span>
@@ -182,22 +164,6 @@ export default function App() {
           {/* MAP PANE */}
           <div className="map-pane">
             <Map onMapReady={handleMapReady} />
-
-            {/* Mobile: KPI overlay (top-left, below style buttons) */}
-            <div className="kpi-map-overlay">
-              <div className="kpi-glass-card">
-                <div className="kpi-glass-label">Einzugsgebiet</div>
-                <div className="kpi-glass-value">2,10 ha</div>
-              </div>
-              <div className="kpi-glass-card">
-                <div className="kpi-glass-label">Schnee Median Juli</div>
-                <div className="kpi-glass-value">{julStats.snow} %</div>
-              </div>
-              <div className="kpi-glass-card">
-                <div className="kpi-glass-label">Nied. Mittel Juli</div>
-                <div className="kpi-glass-value">{julStats.precipitation} mm</div>
-              </div>
-            </div>
 
             {/* Mobile: Layer legend overlay (top-right) */}
             <div className={`map-legend-overlay ${legendOpen ? 'open' : ''}`}>
@@ -248,6 +214,10 @@ export default function App() {
               <div className="data-section">
                 <p className="panel-heading">Hydrologischer Fingerabdruck</p>
                 <HydrologicalChart />
+              </div>
+              <div className="data-section">
+                <p className="panel-heading">Sentinel-2 Einzelszenen · 2018–2025</p>
+                <SnowTimeSeriesChart />
               </div>
               <div className="data-section">
                 <p className="panel-heading">Datentabelle 2018–2025</p>
