@@ -391,77 +391,97 @@ body {
 /* ── Map Pane ────────────────────────────────────────────── */
 .map-pane {
   position: relative;
-  flex: 3 1 0;          /* ~60% of content-col height */
+  flex: 1 1 auto;       /* fills remaining space after data pane */
   min-height: 0;
   overflow: hidden;
-  transition: flex var(--t-slow);
 }
 
 /* ── Data Pane ───────────────────────────────────────────── */
 .data-pane {
   display: flex;
   flex-direction: column;
-  flex: 2 1 0;          /* ~40% of content-col height */
+  flex: 0 0 40%;        /* fixed 40% of content-col height */
   min-height: 0;
   overflow: hidden;
   background: var(--glass-light);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   border-top: 1px solid var(--border);
-  transition: flex var(--t-slow);
+  transition: flex-basis 0.3s ease-in-out, border-top-color 0.3s ease-in-out;
 }
 
-/* ── Collapsed / Expanded Layout States ─────────────────── */
-/* Map maximized → data pane collapses to 0 */
-.layout--map .map-pane  { flex: 1 1 auto; }
-.layout--map .data-pane { flex: 0 0 0; overflow: hidden; border-top: none; }
+.data-pane--closed {
+  flex-basis: 0;
+  border-top-color: transparent;
+}
 
-/* Data maximized → map pane collapses to 0 */
-.layout--data .map-pane  { flex: 0 0 0; overflow: hidden; }
-.layout--data .data-pane { flex: 1 1 auto; }
-
-/* ── Pane Divider (bottom of map pane) ──────────────────── */
+/* ── Pane Divider (bottom of map pane — houses the toggle) ─ */
 .pane-divider {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 36px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  gap: 6px;
-  z-index: 10;
-  padding: 0 12px;
-  /* fade from transparent at top to dark at bottom */
-  background: linear-gradient(to bottom, transparent, rgba(13, 17, 23, 0.65));
+  z-index: 15;
   pointer-events: none;
 }
 
-.pane-btn {
+/* ── Data Panel Toggle Button ───────────────────────────── */
+.data-panel-toggle {
   pointer-events: auto;
+  cursor: pointer;
+  font-family: inherit;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
-  font-size: 11px;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--text-1);
-  background: rgba(13, 17, 23, 0.70);
-  backdrop-filter: var(--blur-sm);
-  -webkit-backdrop-filter: var(--blur-sm);
-  border: 1px solid var(--border-2);
-  border-radius: 999px;
-  padding: 4px 12px;
-  cursor: pointer;
-  transition: background var(--t), border-color var(--t);
-  white-space: nowrap;
   line-height: 1;
+  white-space: nowrap;
+  transition: background var(--t), border-color var(--t), color var(--t);
 }
 
-.pane-btn:hover {
-  background: rgba(30, 40, 60, 0.85);
-  border-color: rgba(255, 255, 255, 0.25);
+/* Open state: ultra-flat ↓ handle at the map/data boundary */
+.data-panel-toggle--open {
+  width: 48px;
+  height: 20px;
+  background: rgba(20, 28, 42, 0.70);
+  backdrop-filter: var(--blur-sm);
+  -webkit-backdrop-filter: var(--blur-sm);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
+  color: var(--text-3);
+  font-size: 10px;
+}
+
+.data-panel-toggle--open:hover {
+  background: rgba(30, 42, 60, 0.90);
+  border-color: var(--border-2);
+  color: var(--text-2);
+}
+
+/* Closed state: "↑ Daten" tab floating at the screen bottom */
+.data-panel-toggle--closed {
+  height: 30px;
+  padding: 0 18px;
+  background: var(--glass-light);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border-2);
+  border-bottom: none;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: 0 -3px 14px rgba(0, 0, 0, 0.35);
+}
+
+.data-panel-toggle--closed:hover {
+  background: var(--surface-2);
+  border-color: rgba(255, 255, 255, 0.24);
+  color: var(--text-1);
 }
 
 /* ── Map overlays (mobile) ───────────────────────────────── */
@@ -546,28 +566,6 @@ body {
   white-space: nowrap;
 }
 
-.data-expand-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--text-2);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 3px 10px;
-  cursor: pointer;
-  transition: background var(--t), color var(--t), border-color var(--t);
-  white-space: nowrap;
-}
-
-.data-expand-btn:hover {
-  color: var(--text-1);
-  background: var(--surface-2);
-  border-color: var(--border-2);
-}
 
 /* ── Data Pane Inner Content ─────────────────────────────── */
 .data-pane-inner {

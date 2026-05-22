@@ -29,9 +29,8 @@ function applyMapPadding(map) {
 }
 
 export default function App() {
-  const [mapExpanded,  setMapExpanded]  = useState(false)
-  const [dataExpanded, setDataExpanded] = useState(false)
-  const [sideOpen,     setSideOpen]     = useState(true)
+  const [dataOpen,  setDataOpen]  = useState(true)
+  const [sideOpen,  setSideOpen]  = useState(true)
   const [legendOpen,   setLegendOpen]   = useState(true)
   const [aboutOpen,    setAboutOpen]    = useState(false)
   const [layerVisible, setLayerVisible] = useState(
@@ -71,7 +70,7 @@ export default function App() {
   useEffect(() => {
     const t = setTimeout(() => mapRef.current?.resize(), 320)
     return () => clearTimeout(t)
-  }, [mapExpanded, dataExpanded, sideOpen])
+  }, [dataOpen, sideOpen])
 
   // Resize + re-pad on window resize
   useEffect(() => {
@@ -94,18 +93,6 @@ export default function App() {
     def.ids.forEach(id => mapRef.current?.setLayoutProperty(id, 'visibility', vis))
   }
 
-  function toggleMapExpand() {
-    setMapExpanded(v => !v)
-    setDataExpanded(false)
-  }
-
-  function toggleDataExpand() {
-    setDataExpanded(v => !v)
-    setMapExpanded(false)
-  }
-
-  const layoutClass = mapExpanded ? 'layout--map' : dataExpanded ? 'layout--data' : ''
-
   return (
     <div className="app">
 
@@ -121,7 +108,7 @@ export default function App() {
       </header>
 
       {/* ── Main Layout ──────────────────────────────────── */}
-      <div className={`main-layout ${layoutClass}`}>
+      <div className="main-layout">
 
         {/* ── Desktop Sidepanel ────────────────────────── */}
         <aside className={`sidepanel ${sideOpen ? 'open' : 'closed'}`}>
@@ -206,21 +193,24 @@ export default function App() {
               )}
             </div>
 
-            {/* Pane controls — bottom of map */}
+            {/* Data-panel toggle — sits at the map/data boundary */}
             <div className="pane-divider">
-              <button className="pane-btn" onClick={toggleMapExpand}>
-                {mapExpanded ? '↕ Teilen' : '↑ Karte maximieren'}
+              <button
+                className={`data-panel-toggle${dataOpen ? ' data-panel-toggle--open' : ' data-panel-toggle--closed'}`}
+                onClick={() => setDataOpen(v => !v)}
+                aria-label={dataOpen ? 'Datenpanel minimieren' : 'Datenpanel öffnen'}
+                aria-expanded={dataOpen}
+              >
+                {dataOpen
+                  ? <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  : <><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M9 5L5 1 1 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> Daten</>
+                }
               </button>
-              {!mapExpanded && (
-                <button className="pane-btn" onClick={toggleDataExpand}>
-                  {dataExpanded ? '↕ Teilen' : '↓ Daten maximieren'}
-                </button>
-              )}
             </div>
           </div>
 
           {/* DATA PANE */}
-          <div className="data-pane">
+          <div className={`data-pane${dataOpen ? '' : ' data-pane--closed'}`}>
 
             {/* ── Data pane header ─────────────────────────── */}
             <div className="data-pane-header">
@@ -228,9 +218,6 @@ export default function App() {
               {/* Title row */}
               <div className="data-header-row">
                 <h2>Hydrologische Analyse · 2018–2025</h2>
-                <button className="data-expand-btn" onClick={toggleDataExpand}>
-                  {dataExpanded ? '↕ Teilen' : '↑ Maximieren'}
-                </button>
               </div>
 
               {/* Control bar */}
