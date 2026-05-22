@@ -6,7 +6,7 @@ export const monthlyAverages = [
   { month: 'May', precipitation: 197, snow: 84 },
   { month: 'Jun', precipitation: 171, snow: 63 },
   { month: 'Jul', precipitation: 242, snow: 22 },
-  { month: 'Aug', precipitation: 256, snow:  6 },
+  { month: 'Aug', precipitation: 256, snow:  2 },
   { month: 'Sep', precipitation: 169, snow:  1 },
 ];
 
@@ -17,7 +17,7 @@ export const annualData = [
       may: { precip: 152.6, snow: null  },
       jun: { precip: 168.1, snow: null  },
       jul: { precip: 152.4, snow: null  },
-      aug: { precip: 300.3, snow: 27.0  },
+      aug: { precip: 300.3, snow:  0.9  },
       sep: { precip: 123.7, snow:  0.0  },
     },
   },
@@ -100,7 +100,7 @@ export const sceneData = [
   { date: '2018-08-12', year: 2018, doy: 224, fsca:   0.5 },
   { date: '2018-08-17', year: 2018, doy: 229, fsca:   0.0 },
   { date: '2018-08-22', year: 2018, doy: 234, fsca:   0.0 },
-  { date: '2018-08-27', year: 2018, doy: 239, fsca:  97.2 },
+  // 2018-08-27 excluded: fsca 97.2 % is an implausible outlier (likely cloud misclassification)
   { date: '2018-09-16', year: 2018, doy: 259, fsca:   0.0 },
   { date: '2018-09-21', year: 2018, doy: 264, fsca:   0.0 },
   { date: '2018-09-26', year: 2018, doy: 269, fsca:   0.0 },
@@ -178,6 +178,6 @@ export const varianceData = [
   { month: 'May', precipMin: 136.0, precipMax: 251.3, snowMin: 76.4, snowMax: 95.6 },
   { month: 'Jun', precipMin:  65.2, precipMax: 256.3, snowMin: 34.0, snowMax: 81.9 },
   { month: 'Jul', precipMin: 152.4, precipMax: 344.4, snowMin:  1.1, snowMax: 40.3 },
-  { month: 'Aug', precipMin: 162.2, precipMax: 382.1, snowMin:  0.0, snowMax: 27.0 },
+  { month: 'Aug', precipMin: 162.2, precipMax: 382.1, snowMin:  0.0, snowMax:  5.3 },
   { month: 'Sep', precipMin:  87.0, precipMax: 322.3, snowMin:  0.0, snowMax:  5.3 },
 ];

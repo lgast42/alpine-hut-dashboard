@@ -307,14 +307,16 @@ export default function App() {
                       onPointClick={setActiveDataDetail}
                     />
                   </div>
-                  <div className="data-section">
-                    <p className="panel-heading">Sentinel-2 Einzelszenen · 2018–2025</p>
-                    <SnowTimeSeriesChart
-                      selectedYear={selectedYear}
-                      activeDataDetail={activeDataDetail}
-                      onDataDetailChange={setActiveDataDetail}
-                    />
-                  </div>
+                  {activeCategory === 'snow' && (
+                    <div className="data-section">
+                      <p className="panel-heading">Sentinel-2 Einzelszenen · 2018–2025</p>
+                      <SnowTimeSeriesChart
+                        selectedYear={selectedYear}
+                        activeDataDetail={activeDataDetail}
+                        onDataDetailChange={setActiveDataDetail}
+                      />
+                    </div>
+                  )}
                 </>
               )}
 
