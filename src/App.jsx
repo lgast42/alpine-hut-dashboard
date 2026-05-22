@@ -251,7 +251,10 @@ export default function App() {
                     <button
                       className={`ctrl-seg-btn${viewMode === 'table' ? ' ctrl-seg-btn--active' : ''}`}
                       aria-pressed={viewMode === 'table'}
-                      onClick={() => setViewMode('table')}
+                      onClick={() => {
+                        if (activeCategory === 'combined') setActiveCategory('snow')
+                        setViewMode('table')
+                      }}
                     >
                       Tabelle
                     </button>
@@ -259,7 +262,7 @@ export default function App() {
 
                   {/* Category filter */}
                   <div className="ctrl-pills" role="group" aria-label="Kategorie">
-                    {CATEGORIES.map(c => (
+                    {CATEGORIES.filter(c => viewMode === 'chart' || c.id !== 'combined').map(c => (
                       <button
                         key={c.id}
                         className={`ctrl-pill${activeCategory === c.id ? ' ctrl-pill--active' : ''}`}
