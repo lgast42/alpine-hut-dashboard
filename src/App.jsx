@@ -66,10 +66,20 @@ export default function App() {
     return () => map.off('style.load', reapply)
   }, [])
 
-  // Resize map after panel transitions complete
+  // Drive map.resize() every frame for the full transition duration so the
+  // Mapbox canvas tracks the growing/shrinking container smoothly.
   useEffect(() => {
-    const t = setTimeout(() => mapRef.current?.resize(), 320)
-    return () => clearTimeout(t)
+    if (!mapRef.current) return
+    const DURATION = 350 // slightly longer than the 0.3s CSS transition
+    const start = performance.now()
+    let raf
+
+    function step(now) {
+      mapRef.current?.resize()
+      if (now - start < DURATION) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
   }, [dataOpen, sideOpen])
 
   // Resize + re-pad on window resize
