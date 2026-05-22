@@ -25,8 +25,10 @@ const C = {
   textPrimary: '#e2e8f0',
   precip:      '#3b82f6',
   precipDark:  '#2563eb',
-  snow:        '#67e8f9',
-  snowRange:   'rgba(103,232,249,0.15)',
+  snow:        '#E2E8F0',
+  snowFill:    'rgba(226,232,240,0.15)',
+  snowRange:   'rgba(226,232,240,0.15)',
+  snowGap:     '#94a3b8',
   vulnFill:    'rgba(252,165,165,0.12)',
   vulnStroke:  'rgba(248,113,113,0.40)',
   vulnLabel:   '#fca5a5',
@@ -34,15 +36,16 @@ const C = {
   tooltipBord: 'rgba(255,255,255,0.12)',
 };
 
-// Maps chart month keys → Sentinel-2 date month numbers and annualData keys
 const MONTH_NUM   = { May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09' };
 const MONTH_KEYS  = { May: 'may', Jun: 'jun', Jul: 'jul', Aug: 'aug', Sep: 'sep' };
 const MONTH_ORDER = ['May', 'Jun', 'Jul', 'Aug', 'Sep'];
 const MONTH_DE    = { May: 'Mai', Jun: 'Juni', Jul: 'Juli', Aug: 'August', Sep: 'September' };
 
+// Monthly medians used as substitutes for edge-null snow values
+const MONTH_MEDIANS = { May: 84, Jun: 63, Jul: 22, Aug: 6, Sep: 1 };
+
 // ── Data helpers ───────────────────────────────────────────────
 
-/** Number of Sentinel-2 scenes for a given month (and optional year). */
 function getScenesCount(month, year) {
   return sceneData.filter(s => {
     if (s.date.slice(5, 7) !== MONTH_NUM[month]) return false;
@@ -51,39 +54,113 @@ function getScenesCount(month, year) {
 }
 
 /**
- * Build the array that Recharts will consume.
- * – 'all': monthly cross-year means + variance bands + error bars
- * – specific year: exact monthly values, no variance/error data
+ * For a year-specific series, enrich each point with:
+ *   snowInterp      – estimated value at null positions so a dashed gap line can be drawn
+ *   snowIsMedian    – true where the monthly median was used (edge gap, no real data)
+ *   snowNoDataLabel – true at the central position of each edge gap (renders "no data" text)
+ *
+ * Edge nulls   → substitute with MONTH_MEDIANS; bridge to the first/last real value.
+ * Middle nulls → linear interpolation between the two surrounding real values; bridge
+ *                endpoints are also included so the dashed segment connects seamlessly.
+ */
+function addSnowInterp(points) {
+  const n         = points.length;
+  const snowVals  = points.map(p => p.snow);
+  const interp    = new Array(n).fill(null);
+  const isMedian  = new Array(n).fill(false);
+  const hasLabel  = new Array(n).fill(false);
+
+  let firstReal = n, lastReal = -1;
+  for (let i = 0; i < n; i++) {
+    if (snowVals[i] != null) {
+      if (i < firstReal) firstReal = i;
+      if (i > lastReal)  lastReal  = i;
+    }
+  }
+
+  // All months missing → full median line
+  if (firstReal === n) {
+    for (let i = 0; i < n; i++) { interp[i] = MONTH_MEDIANS[MONTH_ORDER[i]]; isMedian[i] = true; }
+    hasLabel[Math.floor(n / 2)] = true;
+    return points.map((p, i) => ({ ...p, snowInterp: interp[i], snowIsMedian: isMedian[i], snowNoDataLabel: hasLabel[i] }));
+  }
+
+  // Edge-start gap
+  if (firstReal > 0) {
+    for (let i = 0; i < firstReal; i++) { interp[i] = MONTH_MEDIANS[MONTH_ORDER[i]]; isMedian[i] = true; }
+    interp[firstReal] = snowVals[firstReal]; // bridge endpoint on real side
+    hasLabel[Math.floor(firstReal / 2)] = true;
+  }
+
+  // Edge-end gap
+  if (lastReal < n - 1) {
+    for (let i = lastReal + 1; i < n; i++) { interp[i] = MONTH_MEDIANS[MONTH_ORDER[i]]; isMedian[i] = true; }
+    interp[lastReal] = snowVals[lastReal]; // bridge endpoint on real side
+    hasLabel[lastReal + 1 + Math.floor((n - 1 - lastReal) / 2)] = true;
+  }
+
+  // Middle gaps → linear interpolation
+  for (let i = firstReal + 1; i < lastReal; i++) {
+    if (snowVals[i] != null) continue;
+    let left = i - 1;
+    while (snowVals[left] == null) left--;
+    let right = i + 1;
+    while (right < n && snowVals[right] == null) right++;
+    const t    = (i - left) / (right - left);
+    interp[i]     = parseFloat((snowVals[left] + t * (snowVals[right] - snowVals[left])).toFixed(1));
+    interp[left]  = snowVals[left];
+    interp[right] = snowVals[right];
+  }
+
+  return points.map((p, i) => ({
+    ...p,
+    snowInterp:      interp[i],
+    snowIsMedian:    isMedian[i],
+    snowNoDataLabel: hasLabel[i],
+  }));
+}
+
+/**
+ * Build the array Recharts will consume.
+ * 'all'          → monthly cross-year means + variance bands + error bars
+ * specific year  → exact monthly values with gap-interpolation metadata
  */
 function buildChartData(selectedYear) {
   if (selectedYear === 'all') {
     return monthlyAverages.map((m, i) => ({
-      month:         m.month,
-      precipitation: m.precipitation,
-      snow:          m.snow,
-      precipError:   [m.precipitation - varianceData[i].precipMin,
-                      varianceData[i].precipMax - m.precipitation],
-      snowRange:     [varianceData[i].snowMin, varianceData[i].snowMax],
-      precipMin:     varianceData[i].precipMin,
-      precipMax:     varianceData[i].precipMax,
-      scenesCount:   getScenesCount(m.month, 'all'),
+      month:           m.month,
+      precipitation:   m.precipitation,
+      snow:            m.snow,
+      snowInterp:      null,
+      snowIsMedian:    false,
+      snowNoDataLabel: false,
+      precipError:     [m.precipitation - varianceData[i].precipMin, varianceData[i].precipMax - m.precipitation],
+      snowRange:       [varianceData[i].snowMin, varianceData[i].snowMax],
+      precipMin:       varianceData[i].precipMin,
+      precipMax:       varianceData[i].precipMax,
+      scenesCount:     getScenesCount(m.month, 'all'),
     }));
   }
 
   const entry = annualData.find(d => d.year === selectedYear);
-  return MONTH_ORDER.map(month => {
+  const rawPoints = MONTH_ORDER.map(month => {
     const m = entry?.months[MONTH_KEYS[month]];
     return {
       month,
-      precipitation: m?.precip ?? null,
-      snow:          m?.snow   ?? null,
-      precipError:   null,
-      snowRange:     null,
-      precipMin:     null,
-      precipMax:     null,
-      scenesCount:   getScenesCount(month, selectedYear),
+      precipitation:   m?.precip ?? null,
+      snow:            m?.snow   ?? null,
+      snowInterp:      null,
+      snowIsMedian:    false,
+      snowNoDataLabel: false,
+      precipError:     null,
+      snowRange:       null,
+      precipMin:       null,
+      precipMax:       null,
+      scenesCount:     getScenesCount(month, selectedYear),
     };
   });
+
+  return addSnowInterp(rawPoints);
 }
 
 /** German-language summary string for the detail popup. */
@@ -93,7 +170,6 @@ function formatDetail(d) {
   const monthStr = MONTH_DE[d.month] ?? d.month;
   const n        = d.scenesCount;
   const scLabel  = `${n} Sentinel-2 ${n === 1 ? 'Szene' : 'Szenen'}`;
-
   if (d.type === 'snow') {
     const val = d.value != null ? `${Number(d.value).toFixed(1)} %` : 'keine Daten';
     return `${monthStr} ${yearStr}: fSCA ${val} · Berechnet aus ${scLabel}`;
@@ -109,14 +185,14 @@ export default function HydrologicalChart({
   activeDataDetail = null,
   onPointClick,
 }) {
-  // Re-compute chart data only when the year filter changes
   const chartData = useMemo(() => buildChartData(selectedYear), [selectedYear]);
 
-  const showSnow      = activeCategory !== 'precip';
-  const showPrecip    = activeCategory !== 'snow';
+  const showSnow       = activeCategory !== 'precip';
+  const showPrecip     = activeCategory !== 'snow';
   const isYearSpecific = selectedYear !== 'all';
+  // Vulnerability overlay only makes sense for the combined multi-year view
+  const showVulnArea   = selectedYear === 'all' && activeCategory === 'combined';
 
-  // Which yAxis to anchor the reference area to (must match a rendered axis)
   const refAreaAxisId = showPrecip ? 'left' : 'right';
 
   // ── Click handler ────────────────────────────────────────────
@@ -133,12 +209,11 @@ export default function HydrologicalChart({
     });
   }
 
-  // ── Tooltip (useCallback avoids creating a new reference on each render) ─
+  // ── Tooltip ──────────────────────────────────────────────────
   const renderTooltip = useCallback(({ active, payload, label }) => {
     if (!active || !payload?.length) return null;
     const d = chartData.find(r => r.month === label);
     if (!d) return null;
-
     return (
       <div style={{
         background:     C.tooltipBg,
@@ -182,7 +257,36 @@ export default function HydrologicalChart({
     );
   }, [chartData, showSnow, showPrecip, isYearSpecific]);
 
-  // Only show the popup when this chart triggered the click
+  // ── Custom dot for gap line ──────────────────────────────────
+  // Renders an open circle at median-substituted positions; adds a "no data"
+  // annotation at the centre of each edge gap.
+  const renderInterpDot = useCallback((props) => {
+    const { cx, cy, index } = props;
+    if (cx == null || cy == null) return null;
+    const point = chartData[index];
+    if (!point || point.snowInterp == null) return null;
+    // Bridge endpoints (real values included just for line continuity) → invisible
+    if (!point.snowIsMedian) return <g key={`interp-bridge-${index}`} />;
+    return (
+      <g key={`interp-median-${index}`}>
+        <circle cx={cx} cy={cy} r={3} fill="none" stroke={C.snowGap} strokeWidth={1.2} />
+        {point.snowNoDataLabel && (
+          <text
+            x={cx}
+            y={cy - 10}
+            textAnchor="middle"
+            fill={C.textMuted}
+            fontSize={9}
+            fontStyle="italic"
+            fontFamily={MONO}
+          >
+            no data
+          </text>
+        )}
+      </g>
+    );
+  }, [chartData]);
+
   const popup = activeDataDetail?.source === 'hydro-chart' ? activeDataDetail : null;
 
   // ── Render ───────────────────────────────────────────────────
@@ -194,7 +298,6 @@ export default function HydrologicalChart({
           : 'Monatsmittelwerte der Bewirtschaftungssaison · Streuung 2018–2025'}
       </p>
 
-      {/* Fixed-height wrapper so height="100%" resolves correctly */}
       <div className="hydro-chart-wrap">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
@@ -210,7 +313,7 @@ export default function HydrologicalChart({
               tickLine={false}
             />
 
-            {/* Left axis: Precipitation (conditional) */}
+            {/* Left axis: Precipitation */}
             {showPrecip && (
               <YAxis
                 yAxisId="left"
@@ -229,7 +332,7 @@ export default function HydrologicalChart({
               />
             )}
 
-            {/* Right axis: Snow Cover (conditional) */}
+            {/* Right axis: Snow Cover */}
             {showSnow && (
               <YAxis
                 yAxisId="right"
@@ -250,24 +353,26 @@ export default function HydrologicalChart({
               />
             )}
 
-            {/* Vulnerability phase annotation */}
-            <ReferenceArea
-              yAxisId={refAreaAxisId}
-              x1="Jul"
-              x2="Sep"
-              fill={C.vulnFill}
-              stroke={C.vulnStroke}
-              strokeDasharray="4 3"
-              label={{
-                value: 'Vulnerabilitätsphase',
-                position: 'insideTopRight',
-                fill: C.vulnLabel,
-                fontSize: 10,
-                fontStyle: 'italic',
-              }}
-            />
+            {/* Vulnerability phase — only combined all-years view */}
+            {showVulnArea && (
+              <ReferenceArea
+                yAxisId={refAreaAxisId}
+                x1="Jul"
+                x2="Sep"
+                fill={C.vulnFill}
+                stroke={C.vulnStroke}
+                strokeDasharray="4 3"
+                label={{
+                  value: 'Vulnerabilitätsphase',
+                  position: 'insideTopRight',
+                  fill: C.vulnLabel,
+                  fontSize: 10,
+                  fontStyle: 'italic',
+                }}
+              />
+            )}
 
-            {/* Snow range band — all-years mode only */}
+            {/* Snow range band — all-years mode only (renders below the mean area) */}
             {!isYearSpecific && showSnow && (
               <Area
                 yAxisId="right"
@@ -296,7 +401,6 @@ export default function HydrologicalChart({
                 cursor="pointer"
                 onClick={(data) => handleClick(data, 'precip')}
               >
-                {/* Error bars only in all-years mode */}
                 {!isYearSpecific && (
                   <ErrorBar
                     dataKey="precipError"
@@ -309,22 +413,41 @@ export default function HydrologicalChart({
               </Bar>
             )}
 
-            {/* Snow cover mean line */}
+            {/* Snow cover — filled area + solid line in snow-white */}
             {showSnow && (
-              <Line
+              <Area
                 yAxisId="right"
                 dataKey="snow"
                 name="Mittlere Schneebedeckung (%)"
                 stroke={C.snow}
                 strokeWidth={2.5}
+                fill={C.snowFill}
+                fillOpacity={1}
                 dot={{ r: 5, fill: C.snow, strokeWidth: 0, cursor: 'pointer' }}
                 activeDot={{
                   r: 7,
                   cursor: 'pointer',
-                  // activeDot onClick: (event, dotPayload)
                   onClick: (_, dp) => handleClick(dp.payload, 'snow'),
                 }}
                 connectNulls={false}
+              />
+            )}
+
+            {/* Snow gap line — dashed grey for missing data (year-specific only) */}
+            {showSnow && isYearSpecific && (
+              <Line
+                yAxisId="right"
+                dataKey="snowInterp"
+                name="_snowInterp"
+                stroke={C.snowGap}
+                strokeWidth={1.5}
+                strokeDasharray="5 5"
+                connectNulls={false}
+                legendType="none"
+                tooltipType="none"
+                dot={renderInterpDot}
+                activeDot={false}
+                isAnimationActive={false}
               />
             )}
 
