@@ -61,7 +61,7 @@ function CustomTooltip({ active, payload }) {
       backdropFilter: 'blur(8px)',
     }}>
       <p style={{ margin: 0, fontWeight: 600, color: '#e2e8f0' }}>{date}</p>
-      <p style={{ margin: 0, color: '#67e8f9' }}>
+      <p style={{ margin: 0, color: '#e2e8f0' }}>
         Schneebedeckung: <strong>{fsca.toFixed(1)} %</strong>
       </p>
     </div>
@@ -69,11 +69,21 @@ function CustomTooltip({ active, payload }) {
 }
 
 // ── Component ─────────────────────────────────────────────────
-export default function SnowTimeSeriesChart() {
+export default function SnowTimeSeriesChart({ selectedYear = 'all', activeDataDetail, onDataDetailChange }) {
+  const isYearSpecific = selectedYear !== 'all';
+  const yearEntry      = isYearSpecific ? YEARS.find(y => y.year === selectedYear) : null;
+  const yearData       = isYearSpecific ? (DATA_BY_YEAR[selectedYear] ?? []) : [];
+  const sceneCount     = isYearSpecific ? yearData.length : sceneData.length;
+  const axisColor      = isYearSpecific ? (yearEntry?.color ?? '#e2e8f0') : '#94a3b8';
+
+  const subtitle = isYearSpecific
+    ? `${sceneCount} Sentinel-2 ${sceneCount === 1 ? 'Szene' : 'Szenen'} · Saison ${selectedYear} (Mai–Sep)`
+    : `${sceneCount} Sentinel-2 Szenen · Einzelbeobachtungen pro Saison (Mai–Sep)`;
+
   return (
     <div style={{ width: '100%' }}>
       <p style={{ margin: '0 0 12px', fontSize: 13, color: '#94a3b8' }}>
-        75 Sentinel-2 Szenen · Einzelbeobachtungen pro Saison (Mai–Sep)
+        {subtitle}
       </p>
 
       <ResponsiveContainer width="100%" height={320} minHeight={260}>
@@ -110,7 +120,7 @@ export default function SnowTimeSeriesChart() {
             domain={[0, 100]}
             tickCount={6}
             tickFormatter={v => `${v}%`}
-            tick={{ fill: '#67e8f9', fontSize: 12, fontFamily: MONO }}
+            tick={{ fill: axisColor, fontSize: 12, fontFamily: MONO }}
             axisLine={false}
             tickLine={false}
             label={{
@@ -118,22 +128,38 @@ export default function SnowTimeSeriesChart() {
               angle: -90,
               position: 'insideLeft',
               offset: -32,
-              style: { fill: '#67e8f9', fontSize: 12, fontFamily: MONO },
+              style: { fill: axisColor, fontSize: 12, fontFamily: MONO },
             }}
             name="FSCA"
           />
 
-          {YEARS.map(({ year, color }) => (
+          {isYearSpecific ? (
+            /* Single year: scatter dots connected by a line in chronological order */
             <Scatter
-              key={year}
+              key={selectedYear}
               yAxisId="left"
-              name={String(year)}
-              data={DATA_BY_YEAR[year]}
-              fill={color}
-              opacity={0.85}
+              name={String(selectedYear)}
+              data={yearData}
+              fill={yearEntry?.color ?? '#e2e8f0'}
+              opacity={0.9}
               r={5}
+              line={{ stroke: yearEntry?.color ?? '#e2e8f0', strokeWidth: 2, strokeOpacity: 0.7 }}
+              lineType="joint"
             />
-          ))}
+          ) : (
+            /* All years: one scatter series per year, no connecting lines */
+            YEARS.map(({ year, color }) => (
+              <Scatter
+                key={year}
+                yAxisId="left"
+                name={String(year)}
+                data={DATA_BY_YEAR[year]}
+                fill={color}
+                opacity={0.85}
+                r={5}
+              />
+            ))
+          )}
 
           <Tooltip content={<CustomTooltip />} cursor={false} />
 
