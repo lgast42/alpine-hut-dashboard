@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   ComposedChart,
   Bar,
@@ -187,6 +187,15 @@ export default function HydrologicalChart({
 }) {
   const chartData = useMemo(() => buildChartData(selectedYear), [selectedYear]);
 
+  // ── Mobile breakpoint ────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const mql = window.matchMedia('(max-width: 767px)');
+    const handle = e => setIsMobile(e.matches);
+    mql.addEventListener('change', handle);
+    return () => mql.removeEventListener('change', handle);
+  }, []);
+
   const showSnow       = activeCategory !== 'precip';
   const showPrecip     = activeCategory !== 'snow';
   const isYearSpecific = selectedYear !== 'all';
@@ -302,15 +311,18 @@ export default function HydrologicalChart({
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
-            margin={{ top: 10, right: 48, bottom: 8, left: 48 }}
+            margin={isMobile
+              ? { top: 10, right: 5, bottom: 0, left: 0 }
+              : { top: 10, right: 48, bottom: 8, left: 48 }}
           >
             <CartesianGrid strokeDasharray="4 4" stroke={C.grid} vertical={false} />
 
             <XAxis
               dataKey="month"
-              tick={{ fill: C.textMuted, fontSize: 12, fontFamily: MONO }}
+              tick={{ fill: C.textMuted, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: C.axis }}
               tickLine={false}
+              tickFormatter={isMobile ? v => v[0] : undefined}
             />
 
             {/* Left axis: Precipitation */}
@@ -318,11 +330,12 @@ export default function HydrologicalChart({
               <YAxis
                 yAxisId="left"
                 domain={[0, 500]}
-                tickCount={6}
-                tick={{ fill: C.precip, fontSize: 11, fontFamily: MONO }}
+                tickCount={isMobile ? 4 : 6}
+                width={isMobile ? 28 : undefined}
+                tick={{ fill: C.precip, fontSize: isMobile ? 10 : 11, fontFamily: MONO }}
                 axisLine={false}
                 tickLine={false}
-                label={{
+                label={isMobile ? undefined : {
                   value: 'Niederschlag (mm)',
                   angle: -90,
                   position: 'insideLeft',
@@ -338,12 +351,13 @@ export default function HydrologicalChart({
                 yAxisId="right"
                 orientation="right"
                 domain={[0, 100]}
-                tickCount={6}
-                tick={{ fill: C.snow, fontSize: 11, fontFamily: MONO }}
+                tickCount={isMobile ? 4 : 6}
+                width={isMobile ? 28 : undefined}
+                tick={{ fill: C.snow, fontSize: isMobile ? 10 : 11, fontFamily: MONO }}
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={v => `${v}%`}
-                label={{
+                label={isMobile ? undefined : {
                   value: 'Schneebedeckung (%)',
                   angle: 90,
                   position: 'insideRight',
