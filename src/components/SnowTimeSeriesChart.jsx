@@ -15,14 +15,14 @@ import { sceneData } from '../data/hydrologicalData';
 const MONO = "'IBM Plex Mono', monospace";
 
 const YEARS = [
-  { year: 2018, color: '#94a3b8' },
-  { year: 2019, color: '#fb923c' },
-  { year: 2020, color: '#60a5fa' },
-  { year: 2021, color: '#4ade80' },
-  { year: 2022, color: '#f87171' },
-  { year: 2023, color: '#c084fc' },
-  { year: 2024, color: '#facc15' },
-  { year: 2025, color: '#22d3ee' },
+  { year: 2018, color: '#9ca3af' },  // slate grey
+  { year: 2019, color: '#f97316' },  // orange
+  { year: 2020, color: '#10b981' },  // emerald
+  { year: 2021, color: '#a3e635' },  // lime
+  { year: 2022, color: '#ef4444' },  // red
+  { year: 2023, color: '#c084fc' },  // purple
+  { year: 2024, color: '#fbbf24' },  // amber
+  { year: 2025, color: '#ec4899' },  // pink
 ];
 
 // Pre-split data per year so Recharts can render independent Scatter series

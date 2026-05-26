@@ -1,6 +1,8 @@
 import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   ComposedChart,
+  ScatterChart,
+  Scatter,
   Bar,
   Line,
   Area,
@@ -10,10 +12,14 @@ import {
   Tooltip,
   Legend,
   ReferenceArea,
+  ReferenceLine,
   ResponsiveContainer,
   ErrorBar,
+  useXAxisScale,
+  useYAxisScale,
 } from 'recharts';
 import { monthlyAverages, varianceData, annualData, sceneData } from '../data/hydrologicalData';
+import { dailyPrecipData } from '../data/dailyPrecipitationData';
 
 // ── Constants ──────────────────────────────────────────────────
 const MONO = "'IBM Plex Mono', monospace";
@@ -43,6 +49,102 @@ const MONTH_DE    = { May: 'Mai', Jun: 'Juni', Jul: 'Juli', Aug: 'August', Sep: 
 
 // Monthly medians used as substitutes for edge-null snow values
 const MONTH_MEDIANS = { May: 84, Jun: 63, Jul: 22, Aug: 6, Sep: 1 };
+
+// ── Individual-view constants ──────────────────────────────────
+const YEARS = [
+  { year: 2018, color: '#9ca3af' },  // slate grey
+  { year: 2019, color: '#f97316' },  // orange
+  { year: 2020, color: '#10b981' },  // emerald
+  { year: 2021, color: '#a3e635' },  // lime
+  { year: 2022, color: '#ef4444' },  // red
+  { year: 2023, color: '#c084fc' },  // purple
+  { year: 2024, color: '#fbbf24' },  // amber
+  { year: 2025, color: '#ec4899' },  // pink
+];
+
+const MONTH_STARTS = [
+  { doy: 121, label: 'Mai' },
+  { doy: 152, label: 'Jun' },
+  { doy: 182, label: 'Jul' },
+  { doy: 213, label: 'Aug' },
+  { doy: 244, label: 'Sep' },
+];
+
+function doyToLabel(doy) {
+  for (let i = MONTH_STARTS.length - 1; i >= 0; i--) {
+    if (doy >= MONTH_STARTS[i].doy) return MONTH_STARTS[i].label;
+  }
+  return '';
+}
+
+// Pre-split daily precip and snow scenes by year for performance
+const PRECIP_BY_YEAR = Object.fromEntries(
+  YEARS.map(({ year }) => [year, dailyPrecipData.filter(d => d.year === year)])
+);
+const SNOW_BY_YEAR = Object.fromEntries(
+  YEARS.map(({ year }) => [year, sceneData.filter(d => d.year === year)])
+);
+
+// ── Individual-view tooltip ────────────────────────────────────
+function IndividualTooltip({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload;
+  return (
+    <div style={{
+      background:     'rgba(13,17,23,0.94)',
+      border:         '1px solid rgba(255,255,255,0.12)',
+      borderRadius:   6,
+      padding:        '8px 12px',
+      fontSize:       13,
+      lineHeight:     1.6,
+      backdropFilter: 'blur(8px)',
+    }}>
+      <p style={{ margin: 0, fontWeight: 600, color: '#e2e8f0' }}>{d.date}</p>
+      {d.value != null && (
+        <p style={{ margin: 0, color: C.precip }}>
+          Niederschlag: <strong>{d.value.toFixed(1)} mm</strong>
+        </p>
+      )}
+      {d.fsca != null && (
+        <p style={{ margin: 0, color: C.snow }}>
+          Schneebedeckung: <strong>{d.fsca.toFixed(1)} %</strong>
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ── PrecipBars — direct child of ScatterChart (Recharts 3 hook API) ───────────
+// Renders daily precipitation as vertical bars using the chart's own axis scales.
+// Must be a named React component so hooks (useXAxisScale / useYAxisScale) work.
+function PrecipBars({ precipData, color }) {
+  const xScale = useXAxisScale(0);       // ScatterChart xAxisId defaults to 0
+  const yScale = useYAxisScale('left');  // matches yAxisId="left" + allowDataOverflow on the YAxis
+  if (!xScale || !yScale || !precipData.length) return null;
+  const y0 = yScale(0);
+  return (
+    <g className="precip-bars">
+      {precipData.map((d) => {
+        const cx = xScale(d.doy);
+        const cy = yScale(d.value);
+        const h  = y0 - cy;
+        if (h < 1) return null;
+        return (
+          <rect
+            key={d.date}
+            x={cx - 2}
+            y={cy}
+            width={4}
+            height={h}
+            fill={color}
+            fillOpacity={0.72}
+            rx={1}
+          />
+        );
+      })}
+    </g>
+  );
+}
 
 // ── Data helpers ───────────────────────────────────────────────
 
@@ -180,9 +282,10 @@ function formatDetail(d) {
 
 // ── Component ──────────────────────────────────────────────────
 export default function HydrologicalChart({
-  activeCategory   = 'combined',
-  selectedYear     = 'all',
-  activeDataDetail = null,
+  activeCategory      = 'combined',
+  selectedYear        = 'all',
+  activeDataDetail    = null,
+  temporalResolution  = 'monthly',
   onPointClick,
 }) {
   const chartData = useMemo(() => buildChartData(selectedYear), [selectedYear]);
@@ -298,16 +401,168 @@ export default function HydrologicalChart({
 
   const popup = activeDataDetail?.source === 'hydro-chart' ? activeDataDetail : null;
 
+  // ── Individual-view chart ────────────────────────────────────
+  // Always single-year (App enforces: Einzelwerte ↔ "Alle" are mutually exclusive).
+  function renderIndividualChart() {
+    const yearEntry  = YEARS.find(y => y.year === selectedYear);
+    const snowColor  = yearEntry?.color ?? C.textPrimary;
+    const refAxisId  = showPrecip ? 'left' : 'right';
+
+    // Precipitation: non-zero days only, always blue regardless of year
+    const precipData = (PRECIP_BY_YEAR[selectedYear] ?? []).filter(d => d.value > 0);
+    // Snow: Sentinel-2 scenes for the selected year, year-specific color
+    const snowData   = SNOW_BY_YEAR[selectedYear] ?? [];
+
+    const chartMargin = isMobile
+      ? { top: 10, right: 5, bottom: 0, left: 0 }
+      : { top: 10, right: showSnow ? 48 : 24, bottom: 8, left: showPrecip ? 48 : 8 };
+
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <ScatterChart margin={chartMargin}>
+          <CartesianGrid strokeDasharray="4 4" stroke={C.grid} vertical={false} />
+
+          {MONTH_STARTS.map(({ doy, label }) => (
+            <ReferenceLine
+              key={label}
+              x={doy}
+              yAxisId={refAxisId}
+              stroke="rgba(255,255,255,0.10)"
+              strokeDasharray="3 3"
+            />
+          ))}
+
+          {/* allowDataOverflow: ensures the explicit domain [118,275] is honoured
+              even when no Scatter series carries real data (e.g. "Nied." mode). */}
+          <XAxis
+            dataKey="doy"
+            type="number"
+            domain={[118, 275]}
+            allowDataOverflow
+            ticks={MONTH_STARTS.map(m => m.doy + 15)}
+            tickFormatter={v => isMobile ? doyToLabel(v + 5)[0] : doyToLabel(v + 5)}
+            tick={{ fill: C.textMuted, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
+            axisLine={{ stroke: C.axis }}
+            tickLine={false}
+            name="DOY"
+          />
+
+          {/* Left axis — precipitation mm, always blue.
+              allowDataOverflow is required so Recharts honours domain={[0,90]}
+              even when the precipitation Scatter carries no data points. */}
+          {showPrecip && (
+            <YAxis
+              yAxisId="left"
+              dataKey="value"
+              type="number"
+              domain={[0, 90]}
+              allowDataOverflow
+              tickCount={isMobile ? 4 : 6}
+              width={isMobile ? 28 : undefined}
+              tick={{ fill: C.precip, fontSize: isMobile ? 10 : 11, fontFamily: MONO }}
+              axisLine={false}
+              tickLine={false}
+              label={isMobile ? undefined : {
+                value: 'Niederschlag (mm)',
+                angle: -90,
+                position: 'insideLeft',
+                offset: -32,
+                style: { fill: C.precip, fontSize: 11, fontFamily: MONO },
+              }}
+              name="mm"
+            />
+          )}
+
+          {/* Right axis — snow cover %, year color */}
+          {showSnow && (
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              dataKey="fsca"
+              type="number"
+              domain={[0, 100]}
+              tickCount={isMobile ? 4 : 6}
+              width={isMobile ? 28 : undefined}
+              tick={{ fill: snowColor, fontSize: isMobile ? 10 : 11, fontFamily: MONO }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={v => `${v}%`}
+              label={isMobile ? undefined : {
+                value: 'Schneebedeckung (%)',
+                angle: 90,
+                position: 'insideRight',
+                offset: -32,
+                style: { fill: snowColor, fontSize: 11, fontFamily: MONO },
+              }}
+              name="fSCA"
+            />
+          )}
+
+          {/* Daily precipitation — always blue vertical bars (non-zero days only).
+              PrecipBars is a named React component so it can use Recharts 3 hooks
+              (useXAxisScale / useYAxisScale) which must be called inside a component. */}
+          {showPrecip && (
+            <PrecipBars precipData={precipData} color={C.precip} />
+          )}
+          {/* Invisible Scatter keeps "Niederschlag (mm)" in the Legend */}
+          {showPrecip && (
+            <Scatter
+              yAxisId="left"
+              name="Niederschlag (mm)"
+              data={[]}
+              fill={C.precip}
+              isAnimationActive={false}
+            />
+          )}
+
+          {/* Sentinel-2 snow scenes — year color, connected line shows seasonal trend */}
+          {showSnow && (
+            <Scatter
+              yAxisId="right"
+              name="Schneebedeckung (%)"
+              data={snowData}
+              fill={snowColor}
+              opacity={0.9}
+              r={5}
+              line={{ stroke: snowColor, strokeWidth: 2, strokeOpacity: 0.7 }}
+              lineType="joint"
+            />
+          )}
+
+          <Tooltip content={<IndividualTooltip />} cursor={false} />
+
+          <Legend
+            verticalAlign="bottom"
+            align="center"
+            iconType="circle"
+            wrapperStyle={{ paddingTop: 14, fontSize: isMobile ? 11 : 13, color: C.textMuted }}
+          />
+        </ScatterChart>
+      </ResponsiveContainer>
+    );
+  }
+
   // ── Render ───────────────────────────────────────────────────
+  const isIndividual = temporalResolution === 'individual';
+
   return (
     <div className="hydrological-chart">
       <p style={{ margin: '0 0 10px', fontSize: 13, color: C.textMuted }}>
-        {isYearSpecific
-          ? `Jahresverlauf ${selectedYear} · Monatliche Messwerte`
-          : 'Monatsmittelwerte der Bewirtschaftungssaison · Streuung 2018–2025'}
+        {isIndividual
+          ? (activeCategory === 'snow'
+              ? `Sentinel-2 Szenen · Saison ${selectedYear}`
+              : activeCategory === 'precip'
+                ? `Tageswerte Niederschlag · Saison ${selectedYear} · nur Niederschlagstage`
+                : `Tageswerte Niederschlag & Sentinel-2 Szenen · Saison ${selectedYear}`)
+          : (isYearSpecific
+              ? `Jahresverlauf ${selectedYear} · Monatliche Messwerte`
+              : 'Monatsmittelwerte der Bewirtschaftungssaison · Streuung 2018–2025')}
       </p>
 
       <div className="hydro-chart-wrap">
+        {isIndividual
+          ? renderIndividualChart()
+          : (
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={chartData}
@@ -476,6 +731,7 @@ export default function HydrologicalChart({
             />
           </ComposedChart>
         </ResponsiveContainer>
+          )}
       </div>
 
       {/* ── Detail popup ──────────────────────────────────────── */}

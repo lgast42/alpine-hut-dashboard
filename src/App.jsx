@@ -38,10 +38,11 @@ export default function App() {
   )
 
   // ── Data-panel state ───────────────────────────────────────
-  const [viewMode,         setViewMode]         = useState('chart')         // 'chart' | 'table'
-  const [activeCategory,   setActiveCategory]   = useState('combined')      // 'combined' | 'snow' | 'precip'
-  const [selectedYear,     setSelectedYear]     = useState('all')           // 'all' | 2018..2025
-  const [activeDataDetail, setActiveDataDetail] = useState(null)            // clicked data point
+  const [viewMode,           setViewMode]           = useState('chart')    // 'chart' | 'table'
+  const [activeCategory,     setActiveCategory]     = useState('combined') // 'combined' | 'snow' | 'precip'
+  const [selectedYear,       setSelectedYear]       = useState('all')      // 'all' | 2018..2025
+  const [activeDataDetail,   setActiveDataDetail]   = useState(null)       // clicked data point
+  const [temporalResolution, setTemporalResolution] = useState('monthly')  // 'monthly' | 'individual'
 
   // Reset drill-down selection whenever the filter axes change
   useEffect(() => { setActiveDataDetail(null) }, [activeCategory, selectedYear])
@@ -271,11 +272,38 @@ export default function App() {
                     ))}
                   </div>
 
+                  {/* Temporal resolution toggle — chart mode only.
+                      "Einzelwerte" is hidden when "Alle" years is selected (incompatible). */}
+                  {viewMode === 'chart' && (
+                    <div className="ctrl-seg ctrl-seg--resolution" role="group" aria-label="Auflösung">
+                      <button
+                        className={`ctrl-seg-btn${temporalResolution === 'monthly' ? ' ctrl-seg-btn--active' : ''}`}
+                        aria-pressed={temporalResolution === 'monthly'}
+                        onClick={() => setTemporalResolution('monthly')}
+                        title="Monatliche Mittelwerte"
+                      >
+                        Monatswerte
+                      </button>
+                      {selectedYear !== 'all' && (
+                        <button
+                          className={`ctrl-seg-btn${temporalResolution === 'individual' ? ' ctrl-seg-btn--active' : ''}`}
+                          aria-pressed={temporalResolution === 'individual'}
+                          onClick={() => setTemporalResolution('individual')}
+                          title="Tägliche Einzelwerte / Sentinel-2 Szenen"
+                        >
+                          Einzelwerte
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                 </div>{/* /data-controls-top */}
 
-                {/* Year strip — scrolls horizontally on narrow screens */}
+                {/* Year strip — "Alle" is hidden when Einzelwerte is active (incompatible) */}
                 <div className="year-strip" role="group" aria-label="Jahresauswahl">
-                  {YEAR_OPTIONS.map(y => (
+                  {YEAR_OPTIONS
+                    .filter(y => !(y === 'all' && temporalResolution === 'individual'))
+                    .map(y => (
                     <button
                       key={y}
                       className={`year-pill${selectedYear === y ? ' year-pill--active' : ''}`}
@@ -301,10 +329,11 @@ export default function App() {
                       activeCategory={activeCategory}
                       selectedYear={selectedYear}
                       activeDataDetail={activeDataDetail}
+                      temporalResolution={temporalResolution}
                       onPointClick={setActiveDataDetail}
                     />
                   </div>
-                  {activeCategory === 'snow' && (
+                  {activeCategory === 'snow' && temporalResolution === 'monthly' && (
                     <div className="data-section">
                       <p className="panel-heading">Sentinel-2 Einzelszenen · 2018–2025</p>
                       <SnowTimeSeriesChart
