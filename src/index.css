@@ -796,6 +796,7 @@ body {
 /* ── HydrologicalChart wrapper ───────────────────────────── */
 .hydro-chart-wrap {
   height: 340px;
+  overflow: hidden;
 }
 
 @media (max-width: 767px) {

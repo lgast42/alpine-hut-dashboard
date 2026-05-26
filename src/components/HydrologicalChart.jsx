@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import {
   ComposedChart,
   ScatterChart,
@@ -204,39 +204,10 @@ function NoDataLineRight({ gapData, color }) {
   );
 }
 
-// ── Individual-view tooltip ────────────────────────────────────
-function IndividualTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
-  return (
-    <div style={{
-      background:     'rgba(13,17,23,0.94)',
-      border:         '1px solid rgba(255,255,255,0.12)',
-      borderRadius:   6,
-      padding:        '8px 12px',
-      fontSize:       13,
-      lineHeight:     1.6,
-      backdropFilter: 'blur(8px)',
-    }}>
-      <p style={{ margin: 0, fontWeight: 600, color: '#e2e8f0' }}>{d.date}</p>
-      {d.value != null && (
-        <p style={{ margin: 0, color: C.precip }}>
-          Niederschlag: <strong>{d.value.toFixed(1)} mm</strong>
-        </p>
-      )}
-      {d.fsca != null && (
-        <p style={{ margin: 0, color: C.snow }}>
-          Schneebedeckung: <strong>{d.fsca.toFixed(1)} %</strong>
-        </p>
-      )}
-    </div>
-  );
-}
-
 // ── PrecipBars — direct child of ScatterChart (Recharts 3 hook API) ───────────
 // Renders daily precipitation as vertical bars using the chart's own axis scales.
 // Must be a named React component so hooks (useXAxisScale / useYAxisScale) work.
-function PrecipBars({ precipData, color }) {
+function PrecipBars({ precipData, color, fillOpacity = 0.72, onBarClick }) {
   const xScale = useXAxisScale(0);       // ScatterChart xAxisId defaults to 0
   const yScale = useYAxisScale('left');  // matches yAxisId="left" + allowDataOverflow on the YAxis
   if (!xScale || !yScale || !precipData.length) return null;
@@ -256,13 +227,24 @@ function PrecipBars({ precipData, color }) {
             width={4}
             height={h}
             fill={color}
-            fillOpacity={0.72}
+            fillOpacity={fillOpacity}
             rx={1}
+            onClick={onBarClick ? () => onBarClick(d) : undefined}
+            style={onBarClick ? { cursor: 'pointer' } : undefined}
           />
         );
       })}
     </g>
   );
+}
+
+/** Captures the current X-axis scale into a ref so the chart-level onClick
+ *  handler can convert pixel positions to DOY values for precipitation-bar detection.
+ *  Must be a named component to use Recharts 3 hooks correctly. */
+function IndividualXScaleCapture({ xScaleRef }) {
+  const xScale = useXAxisScale(0);
+  xScaleRef.current = xScale;
+  return null;
 }
 
 // ── Data helpers ───────────────────────────────────────────────
@@ -387,6 +369,14 @@ function buildChartData(selectedYear) {
 /** German-language summary string for the detail popup. */
 function formatDetail(d) {
   if (!d) return '';
+  if (d.source === 'hydro-individual') {
+    if (d.type === 'precip') {
+      const val = d.value != null ? `${d.value.toFixed(1)} mm` : 'keine Daten';
+      return `${d.date}: Niederschlag ${val} · SPARTACUS v2.1`;
+    }
+    const val = d.fsca != null ? `${d.fsca.toFixed(1)} %` : 'keine Daten';
+    return `${d.date}: Schneebedeckung ${val} · Sentinel-2`;
+  }
   const yearStr  = d.year === 'all' ? '2018–2025' : String(d.year);
   const monthStr = MONTH_DE[d.month] ?? d.month;
   const n        = d.scenesCount;
@@ -418,6 +408,10 @@ export default function HydrologicalChart({
     return () => mql.removeEventListener('change', handle);
   }, []);
 
+  // Refs for click coordination (no re-render overhead needed)
+  const xScaleRef      = useRef(null);  // X-scale for DOY ↔ pixel in individual view
+  const justClickedRef = useRef(false); // true when a series element was just clicked
+
   const showSnow       = activeCategory !== 'precip';
   const showPrecip     = activeCategory !== 'snow';
   const isYearSpecific = selectedYear !== 'all';
@@ -429,6 +423,14 @@ export default function HydrologicalChart({
   // ── Click handler ────────────────────────────────────────────
   function handleClick(data, type) {
     if (!onPointClick || !data) return;
+    justClickedRef.current = true; // prevent chart-level onClick from clearing popup
+    // Toggle: re-clicking the same point clears the popup
+    if (
+      activeDataDetail?.source === 'hydro-chart' &&
+      activeDataDetail?.month  === data.month &&
+      activeDataDetail?.type   === type &&
+      activeDataDetail?.year   === selectedYear
+    ) { onPointClick(null); return; }
     onPointClick({
       source:      'hydro-chart',
       month:       data.month,
@@ -439,54 +441,6 @@ export default function HydrologicalChart({
       scenesCount: data.scenesCount,
     });
   }
-
-  // ── Tooltip ──────────────────────────────────────────────────
-  const renderTooltip = useCallback(({ active, payload, label }) => {
-    if (!active || !payload?.length) return null;
-    const d = chartData.find(r => r.month === label);
-    if (!d) return null;
-    return (
-      <div style={{
-        background:     C.tooltipBg,
-        border:         `1px solid ${C.tooltipBord}`,
-        borderRadius:   6,
-        padding:        '10px 14px',
-        fontSize:       13,
-        lineHeight:     1.7,
-        backdropFilter: 'blur(8px)',
-      }}>
-        <p style={{ margin: '0 0 4px', fontWeight: 600, color: C.textPrimary }}>{label}</p>
-
-        {showPrecip && (
-          <p style={{ margin: 0, color: C.precip }}>
-            Niederschlag:{' '}
-            <strong>{d.precipitation != null ? `${d.precipitation} mm` : '—'}</strong>
-            {!isYearSpecific && d.precipMin != null && (
-              <span style={{ color: C.textMuted, fontWeight: 400 }}>
-                {' '}({d.precipMin}–{d.precipMax} mm)
-              </span>
-            )}
-          </p>
-        )}
-
-        {showSnow && (
-          <p style={{ margin: 0, color: C.snow }}>
-            Schneebedeckung:{' '}
-            <strong>{d.snow != null ? `${d.snow} %` : '—'}</strong>
-            {!isYearSpecific && d.snowRange && (
-              <span style={{ color: C.textMuted, fontWeight: 400 }}>
-                {' '}({d.snowRange[0]}%–{d.snowRange[1]}%)
-              </span>
-            )}
-          </p>
-        )}
-
-        <p style={{ margin: '4px 0 0', color: C.textMuted, fontSize: 11 }}>
-          {d.scenesCount} Sentinel-2 {d.scenesCount === 1 ? 'Szene' : 'Szenen'}
-        </p>
-      </div>
-    );
-  }, [chartData, showSnow, showPrecip, isYearSpecific]);
 
   // ── Custom dot for gap line ──────────────────────────────────
   // Renders an open circle at median-substituted positions; adds a "no data"
@@ -518,7 +472,9 @@ export default function HydrologicalChart({
     );
   }, [chartData]);
 
-  const popup = activeDataDetail?.source === 'hydro-chart' ? activeDataDetail : null;
+  const popup = (activeDataDetail?.source === 'hydro-chart' || activeDataDetail?.source === 'hydro-individual')
+    ? activeDataDetail
+    : null;
 
   // ── Individual-view chart ────────────────────────────────────
   // Always single-year (App enforces: Einzelwerte ↔ "Alle" are mutually exclusive).
@@ -539,7 +495,35 @@ export default function HydrologicalChart({
 
     return (
       <ResponsiveContainer width="100%" height="100%">
-        <ScatterChart margin={chartMargin}>
+        <ScatterChart
+          margin={chartMargin}
+          onClick={(data) => {
+            // If a series element (snow scatter) just fired its own onClick, skip
+            if (justClickedRef.current) { justClickedRef.current = false; return; }
+
+            // Try coordinate-based precipitation-bar detection
+            const chartX = data?.chartX;
+            if (showPrecip && precipData.length && chartX != null && xScaleRef.current) {
+              // Find the closest bar whose center is within ±5 px of the click
+              const bar = precipData.reduce((best, d) => {
+                const dist = Math.abs(xScaleRef.current(d.doy) - chartX);
+                return (!best || dist < Math.abs(xScaleRef.current(best.doy) - chartX)) ? d : best;
+              }, null);
+              if (bar && Math.abs(xScaleRef.current(bar.doy) - chartX) <= 5) {
+                const isSame = activeDataDetail?.source === 'hydro-individual' &&
+                  activeDataDetail?.type === 'precip' && activeDataDetail?.date === bar.date;
+                onPointClick?.(isSame ? null : {
+                  source: 'hydro-individual', type: 'precip',
+                  date: bar.date, doy: bar.doy, year: bar.year, value: bar.value,
+                });
+                return;
+              }
+            }
+
+            // Empty-area click → clear popup
+            onPointClick?.(null);
+          }}
+        >
           <CartesianGrid strokeDasharray="4 4" stroke={C.grid} vertical={false} />
 
           {MONTH_STARTS.map(({ doy, label }) => (
@@ -649,6 +633,14 @@ export default function HydrologicalChart({
               r={5}
               line={{ stroke: snowColor, strokeWidth: 2, strokeOpacity: 0.7 }}
               lineType="joint"
+              onClick={(d) => {
+                justClickedRef.current = true;
+                const isSame = activeDataDetail?.source === 'hydro-individual' &&
+                  activeDataDetail?.type === 'snow' && activeDataDetail?.date === d.date;
+                if (isSame) { onPointClick?.(null); return; }
+                onPointClick?.({ source: 'hydro-individual', type: 'snow',
+                  date: d.date, doy: d.doy, year: d.year, fsca: d.fsca });
+              }}
             />
           )}
 
@@ -668,7 +660,8 @@ export default function HydrologicalChart({
             />
           )}
 
-          <Tooltip content={<IndividualTooltip />} cursor={false} />
+          {/* Captures the x-scale so chart-level onClick can convert pixels → DOY */}
+          <IndividualXScaleCapture xScaleRef={xScaleRef} />
 
           <Legend
             verticalAlign="bottom"
@@ -708,6 +701,10 @@ export default function HydrologicalChart({
             margin={isMobile
               ? { top: 10, right: 5, bottom: 0, left: 0 }
               : { top: 10, right: 48, bottom: 8, left: 48 }}
+            onClick={() => {
+              if (justClickedRef.current) { justClickedRef.current = false; return; }
+              onPointClick?.(null);
+            }}
           >
             <CartesianGrid strokeDasharray="4 4" stroke={C.grid} vertical={false} />
 
@@ -861,7 +858,6 @@ export default function HydrologicalChart({
               />
             )}
 
-            <Tooltip content={renderTooltip} />
 
             <Legend
               verticalAlign="bottom"

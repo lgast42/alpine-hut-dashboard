@@ -44,7 +44,7 @@ export default function App() {
   const [temporalResolution, setTemporalResolution] = useState('monthly')  // 'monthly' | 'individual'
 
   // Reset drill-down selection whenever the filter axes change
-  useEffect(() => { setActiveDataDetail(null) }, [activeCategory, selectedYear])
+  useEffect(() => { setActiveDataDetail(null) }, [activeCategory, selectedYear, temporalResolution])
 
   const mapRef          = useRef(null)
   const layerVisibleRef = useRef(layerVisible)
