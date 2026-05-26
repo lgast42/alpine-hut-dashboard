@@ -2,19 +2,20 @@ import { useState, useRef, useEffect } from 'react'
 import Map from './components/Map'
 import HydrologicalChart from './components/HydrologicalChart'
 import AnnualTable from './components/AnnualTable'
+import { useLanguage } from './i18n/LanguageContext'
 
 const LAYER_DEFS = [
-  { key: 'hut',       label: 'Neue Prager Hütte', ids: ['hut'] },
-  { key: 'intake',    label: 'Tankfassung',        ids: ['intake'] },
-  { key: 'catchment', label: 'Einzugsgebiet',      ids: ['catchment-fill', 'catchment-outline'] },
-  { key: 'flow',      label: 'Abflussbahnen',      ids: ['flow-lines'] },
-  { key: 'pipeline',  label: 'Wasserleitung',      ids: ['pipeline'] },
+  { key: 'hut',       ids: ['hut'] },
+  { key: 'intake',    ids: ['intake'] },
+  { key: 'catchment', ids: ['catchment-fill', 'catchment-outline'] },
+  { key: 'flow',      ids: ['flow-lines'] },
+  { key: 'pipeline',  ids: ['pipeline'] },
 ]
 
 const CATEGORIES = [
-  { id: 'combined', label: 'Kombiniert' },
-  { id: 'snow',     label: 'Schnee'     },
-  { id: 'precip',   label: 'Nied.'      },
+  { id: 'combined' },
+  { id: 'snow'     },
+  { id: 'precip'   },
 ]
 
 const YEAR_OPTIONS = ['all', 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
@@ -28,6 +29,8 @@ function applyMapPadding(map) {
 }
 
 export default function App() {
+  const { lang, toggleLang, t } = useLanguage()
+
   const [panelHeight,    setPanelHeight]    = useState(40)   // % of viewport, 10–85
   const [panelMinimized, setPanelMinimized] = useState(false)
   const [sideOpen,  setSideOpen]  = useState(true)
@@ -149,11 +152,20 @@ export default function App() {
       <header className="app-header">
         <div className="header-brand">
           <div className="header-title">
-            <h1>Hydrologische Resilienz alpiner Schutzhütten</h1>
-            <p className="header-subtitle">Neue Prager Hütte · 2796 m · Innergschlöß, Osttirol</p>
+            <h1>{t('header.title')}</h1>
+            <p className="header-subtitle">{t('header.subtitle')}</p>
           </div>
         </div>
-        <span className="header-badge">Hohe Tauern</span>
+        <span className="header-badge">{t('header.badge')}</span>
+        <button
+          className="lang-toggle-btn"
+          onClick={toggleLang}
+          aria-label="Toggle language"
+        >
+          <span className={lang === 'en' ? 'active' : ''}>EN</span>
+          {' | '}
+          <span className={lang === 'de' ? 'active' : ''}>DE</span>
+        </button>
       </header>
 
       {/* ── Main Layout ──────────────────────────────────── */}
@@ -162,11 +174,11 @@ export default function App() {
         {/* ── Desktop Sidepanel ────────────────────────── */}
         <aside className={`sidepanel ${sideOpen ? 'open' : 'closed'}`}>
           <div className="sidepanel-header">
-            <span className="sidepanel-title">Analyse</span>
+            <span className="sidepanel-title">{t('side.title')}</span>
             <button
               className="side-toggle"
               onClick={() => setSideOpen(v => !v)}
-              aria-label={sideOpen ? 'Sidepanel schließen' : 'Sidepanel öffnen'}
+              aria-label={sideOpen ? t('side.close') : t('side.open')}
             >
               {sideOpen ? '◀' : '▶'}
             </button>
@@ -175,7 +187,7 @@ export default function App() {
           <div className="sidepanel-content">
             <div className={`layer-legend ${legendOpen ? 'open' : ''}`}>
               <button className="legend-toggle-btn" onClick={() => setLegendOpen(v => !v)}>
-                <span>Kartenebenen</span>
+                <span>{t('side.layers.heading')}</span>
                 <span>{legendOpen ? '▴' : '▾'}</span>
               </button>
               {legendOpen && (
@@ -189,7 +201,7 @@ export default function App() {
                           onChange={e => toggleLayer(def, e.target.checked)}
                         />
                         <span className={`legend-swatch ${def.key}`} />
-                        {def.label}
+                        {t(`side.layers.${def.key}`)}
                       </label>
                     </li>
                   ))}
@@ -199,12 +211,12 @@ export default function App() {
 
             <div className={`about-accordion ${aboutOpen ? 'open' : ''}`}>
               <button className="about-toggle" onClick={() => setAboutOpen(v => !v)}>
-                <span>Über das Projekt</span>
+                <span>{t('side.about.heading')}</span>
                 <span>{aboutOpen ? '▴' : '▾'}</span>
               </button>
               {aboutOpen && (
                 <div className="about-text">
-                  <p>Pilotanalyse der hydrologischen Resilienz der Neuen Prager Hütte (2796 m, Innergschlöß, Osttirol). Einzugsgebiet modelliert via hydrologische Modellierung (MFD). Schneebedeckung aus Sentinel-2 NDSI (&gt; 0,4). Niederschlag aus SPARTACUS v2.1 (GeoSphere Austria). Der hydrologische Übergang von nival-dominiert zu stochastisch-pluvial ist für Aug/Sep besonders ausgeprägt.</p>
+                  <p>{t('side.about.text')}</p>
                 </div>
               )}
             </div>
@@ -221,7 +233,7 @@ export default function App() {
             {/* Mobile: Layer legend overlay (top-right) */}
             <div className={`map-legend-overlay ${legendOpen ? 'open' : ''}`}>
               <button className="legend-toggle-btn" onClick={() => setLegendOpen(v => !v)}>
-                <span>Ebenen {legendOpen ? '▴' : '▾'}</span>
+                <span>{t('side.layers.short')} {legendOpen ? '▴' : '▾'}</span>
               </button>
               {legendOpen && (
                 <ul className="legend-list">
@@ -234,7 +246,7 @@ export default function App() {
                           onChange={e => toggleLayer(def, e.target.checked)}
                         />
                         <span className={`legend-swatch ${def.key}`} />
-                        {def.label}
+                        {t(`side.layers.${def.key}`)}
                       </label>
                     </li>
                   ))}
@@ -248,11 +260,11 @@ export default function App() {
                 <button
                   className="data-panel-toggle data-panel-toggle--closed"
                   onClick={() => setPanelMinimized(false)}
-                  aria-label="Datenpanel öffnen"
+                  aria-label={t('panel.open')}
                   aria-expanded={false}
                 >
                   <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M9 5L5 1 1 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  {' '}Daten
+                  {' '}{t('panel.tab')}
                 </button>
               </div>
             )}
@@ -277,7 +289,7 @@ export default function App() {
               <button
                 className="panel-toggle-btn"
                 onClick={() => setPanelMinimized(true)}
-                aria-label="Datenpanel minimieren"
+                aria-label={t('panel.minimize')}
               >
                 <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
@@ -288,7 +300,7 @@ export default function App() {
 
               {/* Title row */}
               <div className="data-header-row">
-                <h2>Hydrologische Analyse · 2018–2025</h2>
+                <h2>{t('panel.heading')}</h2>
               </div>
 
               {/* Control bar */}
@@ -298,13 +310,13 @@ export default function App() {
                 <div className="data-controls-top">
 
                   {/* View toggle */}
-                  <div className="ctrl-seg" role="group" aria-label="Ansicht">
+                  <div className="ctrl-seg" role="group" aria-label={t('panel.view_label')}>
                     <button
                       className={`ctrl-seg-btn${viewMode === 'chart' ? ' ctrl-seg-btn--active' : ''}`}
                       aria-pressed={viewMode === 'chart'}
                       onClick={() => setViewMode('chart')}
                     >
-                      Graph
+                      {t('panel.chart')}
                     </button>
                     <button
                       className={`ctrl-seg-btn${viewMode === 'table' ? ' ctrl-seg-btn--active' : ''}`}
@@ -314,12 +326,12 @@ export default function App() {
                         setViewMode('table')
                       }}
                     >
-                      Tabelle
+                      {t('panel.table')}
                     </button>
                   </div>
 
                   {/* Category filter */}
-                  <div className="ctrl-pills" role="group" aria-label="Kategorie">
+                  <div className="ctrl-pills" role="group" aria-label={t('panel.category_label')}>
                     {CATEGORIES.filter(c => viewMode === 'chart' || c.id !== 'combined').map(c => (
                       <button
                         key={c.id}
@@ -327,31 +339,31 @@ export default function App() {
                         aria-pressed={activeCategory === c.id}
                         onClick={() => setActiveCategory(c.id)}
                       >
-                        {c.label}
+                        {t(`panel.${c.id}`)}
                       </button>
                     ))}
                   </div>
 
                   {/* Temporal resolution toggle — chart mode only.
-                      "Einzelwerte" is hidden when "Alle" years is selected (incompatible). */}
+                      "Individual" is hidden when "All" years is selected (incompatible). */}
                   {viewMode === 'chart' && (
-                    <div className="ctrl-seg ctrl-seg--resolution" role="group" aria-label="Auflösung">
+                    <div className="ctrl-seg ctrl-seg--resolution" role="group" aria-label={t('panel.resolution_label')}>
                       <button
                         className={`ctrl-seg-btn${temporalResolution === 'monthly' ? ' ctrl-seg-btn--active' : ''}`}
                         aria-pressed={temporalResolution === 'monthly'}
                         onClick={() => setTemporalResolution('monthly')}
-                        title="Monatliche Mittelwerte"
+                        title={t('panel.monthly_title')}
                       >
-                        Monatswerte
+                        {t('panel.monthly')}
                       </button>
                       {selectedYear !== 'all' && (
                         <button
                           className={`ctrl-seg-btn${temporalResolution === 'individual' ? ' ctrl-seg-btn--active' : ''}`}
                           aria-pressed={temporalResolution === 'individual'}
                           onClick={() => setTemporalResolution('individual')}
-                          title="Tägliche Einzelwerte / Sentinel-2 Szenen"
+                          title={t('panel.individual_title')}
                         >
-                          Einzelwerte
+                          {t('panel.individual')}
                         </button>
                       )}
                     </div>
@@ -360,9 +372,9 @@ export default function App() {
                 </div>{/* /data-controls-top */}
 
                 {/* Year strip — hidden in table mode (table always shows all years);
-                    "Alle" is also hidden when Einzelwerte is active (incompatible). */}
+                    "All" is also hidden when Individual is active (incompatible). */}
                 {viewMode !== 'table' && (
-                  <div className="year-strip" role="group" aria-label="Jahresauswahl">
+                  <div className="year-strip" role="group" aria-label={t('panel.year_label')}>
                     {YEAR_OPTIONS
                       .filter(y => !(y === 'all' && temporalResolution === 'individual'))
                       .map(y => (
@@ -372,7 +384,7 @@ export default function App() {
                         aria-pressed={selectedYear === y}
                         onClick={() => setSelectedYear(y)}
                       >
-                        {y === 'all' ? 'Alle' : y}
+                        {y === 'all' ? t('panel.all') : y}
                       </button>
                     ))}
                   </div>
@@ -387,7 +399,7 @@ export default function App() {
               {viewMode === 'chart' && (
                 <>
                   <div className="data-section">
-                    <p className="panel-heading">Hydrologischer Fingerabdruck</p>
+                    <p className="panel-heading">{t('panel.heading_chart')}</p>
                     <HydrologicalChart
                       activeCategory={activeCategory}
                       selectedYear={selectedYear}
@@ -401,7 +413,7 @@ export default function App() {
 
               {viewMode === 'table' && (
                 <div className="data-section data-section--full">
-                  <p className="panel-heading">Datentabelle 2018–2025</p>
+                  <p className="panel-heading">{t('panel.heading_table')}</p>
                   <div className="annual-table-wrapper">
                     <AnnualTable
                       activeCategory={activeCategory}

@@ -861,6 +861,40 @@ body {
   grid-column: 1 / -1;
 }
 
+/* ── Language Toggle ─────────────────────────────────────── */
+.lang-toggle-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-3);
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t);
+  line-height: 1.6;
+}
+
+.lang-toggle-btn:hover {
+  background: var(--surface-2);
+  border-color: var(--border-2);
+}
+
+.lang-toggle-btn span {
+  transition: color var(--t);
+  color: var(--text-3);
+}
+
+.lang-toggle-btn span.active {
+  color: var(--text-1);
+}
+
 /* ── Scrollbar ───────────────────────────────────────────── */
 ::-webkit-scrollbar          { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track    { background: transparent; }

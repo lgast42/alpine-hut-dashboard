@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import { annualData, sceneData } from '../data/hydrologicalData'
+import { useLanguage } from '../i18n/LanguageContext'
 
 // ── Constants ──────────────────────────────────────────────────
 const MONTHS = [
-  { key: 'may', label: 'Mai' },
-  { key: 'jun', label: 'Jun' },
-  { key: 'jul', label: 'Jul' },
-  { key: 'aug', label: 'Aug' },
-  { key: 'sep', label: 'Sep' },
+  { key: 'may', tKey: 'May' },
+  { key: 'jun', tKey: 'Jun' },
+  { key: 'jul', tKey: 'Jul' },
+  { key: 'aug', tKey: 'Aug' },
+  { key: 'sep', tKey: 'Sep' },
 ]
 
 // Maps month key → 2-digit string for sceneData date comparison
@@ -52,6 +53,7 @@ export default function AnnualTable({
   activeDataDetail = null,
   onDataDetailChange,
 }) {
+  const { t } = useLanguage()
   const [hoveredYear, setHoveredYear] = useState(null)
   const [clickedCell, setClickedCell] = useState(null) // { key, scenes }
 
@@ -82,13 +84,6 @@ export default function AnnualTable({
     })
   }
 
-  // ── Subtitle ────────────────────────────────────────────────
-  const subtitle = {
-    combined: 'fSCA (%) mit Niederschlag (mm) darunter · — = keine Daten (Wolkenbedeckung)',
-    snow:     'Schneebedeckung fSCA % · Blau = hoch, Rot = vulnerabel · — = keine Daten',
-    precip:   'Niederschlag (mm) · Hell- bis Dunkelblau je nach Intensität',
-  }[activeCategory]
-
   // ── Base styles ─────────────────────────────────────────────
   const cellBase = {
     padding:       '7px 10px',
@@ -115,7 +110,7 @@ export default function AnnualTable({
   return (
     <div>
       <p style={{ margin: '0 0 12px', fontSize: 13, color: '#94a3b8' }}>
-        {subtitle}
+        {t(`table.sub_${activeCategory}`)}
       </p>
 
       <div style={{ overflowX: 'auto' }}>
@@ -126,9 +121,9 @@ export default function AnnualTable({
         }}>
           <thead>
             <tr>
-              <th style={{ ...headerCell, textAlign: 'left' }}>Jahr</th>
+              <th style={{ ...headerCell, textAlign: 'left' }}>{t('table.year')}</th>
               {MONTHS.map(m => (
-                <th key={m.key} style={headerCell}>{m.label}</th>
+                <th key={m.key} style={headerCell}>{t(`months.${m.tKey}`)}</th>
               ))}
             </tr>
           </thead>
@@ -188,7 +183,7 @@ export default function AnnualTable({
                     return (
                       <td
                         key={m.key}
-                        title={`${getScenesCount(m.key, row.year)} Sentinel-2 Szene(n) – klicken für Details`}
+                        title={t('table.scene_title', { n: getScenesCount(m.key, row.year) })}
                         style={{
                           ...cellBase,
                           background: bg,
@@ -246,7 +241,7 @@ export default function AnnualTable({
                             padding:      '1px 5px',
                             whiteSpace:   'nowrap',
                           }}>
-                            {scenes} {scenes === 1 ? 'Szene' : 'Szenen'}
+                            {scenes} {scenes === 1 ? t('table.scene_one') : t('table.scene_many')}
                           </div>
                         )}
                       </td>

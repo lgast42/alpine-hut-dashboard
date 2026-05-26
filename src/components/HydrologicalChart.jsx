@@ -20,6 +20,7 @@ import {
 } from 'recharts';
 import { monthlyAverages, varianceData, annualData, sceneData } from '../data/hydrologicalData';
 import { dailyPrecipData } from '../data/dailyPrecipitationData';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // ── Constants ──────────────────────────────────────────────────
 const MONO = "'IBM Plex Mono', monospace";
@@ -42,10 +43,10 @@ const C = {
   tooltipBord: 'rgba(255,255,255,0.12)',
 };
 
+// English month keys used throughout — translated in the tick formatters
 const MONTH_NUM   = { May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09' };
 const MONTH_KEYS  = { May: 'may', Jun: 'jun', Jul: 'jul', Aug: 'aug', Sep: 'sep' };
 const MONTH_ORDER = ['May', 'Jun', 'Jul', 'Aug', 'Sep'];
-const MONTH_DE    = { May: 'Mai', Jun: 'Juni', Jul: 'Juli', Aug: 'August', Sep: 'September' };
 
 // Monthly medians used as substitutes for edge-null snow values
 const MONTH_MEDIANS = { May: 84, Jun: 63, Jul: 22, Aug: 6, Sep: 1 };
@@ -62,14 +63,16 @@ const YEARS = [
   { year: 2025, color: '#ec4899' },  // pink
 ];
 
+// English month keys — translated at render time via t('months.key')
 const MONTH_STARTS = [
-  { doy: 121, label: 'Mai' },
+  { doy: 121, label: 'May' },
   { doy: 152, label: 'Jun' },
   { doy: 182, label: 'Jul' },
   { doy: 213, label: 'Aug' },
   { doy: 244, label: 'Sep' },
 ];
 
+// Returns the English month key for a given DOY (used in tick formatters)
 function doyToLabel(doy) {
   for (let i = MONTH_STARTS.length - 1; i >= 0; i--) {
     if (doy >= MONTH_STARTS[i].doy) return MONTH_STARTS[i].label;
@@ -88,7 +91,7 @@ const SNOW_BY_YEAR = Object.fromEntries(
 // ── Individual-view gap interpolation ─────────────────────────
 // Monthly median fSCA values used as fallback for months with no Sentinel-2 data.
 const MONTH_MEDIANS_DOY = [
-  { startDoy: 121, endDoy: 151, centerDoy: 136, label: 'Mai', median: 84 },
+  { startDoy: 121, endDoy: 151, centerDoy: 136, label: 'May', median: 84 },
   { startDoy: 152, endDoy: 181, centerDoy: 166, label: 'Jun', median: 63 },
   { startDoy: 182, endDoy: 212, centerDoy: 197, label: 'Jul', median: 22 },
   { startDoy: 213, endDoy: 243, centerDoy: 228, label: 'Aug', median:  6 },
@@ -140,6 +143,7 @@ function computeSnowGapData(snowData) {
 function NoDataLineRight({ gapData, color }) {
   const xScale = useXAxisScale(0);
   const yScale = useYAxisScale('right');
+  const { t } = useLanguage();
   if (!xScale || !yScale || !gapData?.hasGap) return null;
 
   const { fullGap, startSegment, endSegment } = gapData;
@@ -188,7 +192,7 @@ function NoDataLineRight({ gapData, color }) {
             fontStyle="italic"
             fontFamily={MONO}
           >
-            no data
+            {t('chart.no_data')}
           </text>
         )}
       </g>
@@ -366,27 +370,28 @@ function buildChartData(selectedYear) {
   return addSnowInterp(rawPoints);
 }
 
-/** German-language summary string for the detail popup. */
-function formatDetail(d) {
+/** Builds the detail popup text string. Accepts t() so it is language-aware. */
+function formatDetail(d, t) {
   if (!d) return '';
+  const noData = t('detail.no_data');
   if (d.source === 'hydro-individual') {
     if (d.type === 'precip') {
-      const val = d.value != null ? `${d.value.toFixed(1)} mm` : 'keine Daten';
-      return `${d.date}: Niederschlag ${val} · SPARTACUS v2.1`;
+      const val = d.value != null ? `${d.value.toFixed(1)} mm` : noData;
+      return `${d.date}: ${t('detail.precip_label')} ${val} · ${t('detail.precip_source')}`;
     }
-    const val = d.fsca != null ? `${d.fsca.toFixed(1)} %` : 'keine Daten';
-    return `${d.date}: Schneebedeckung ${val} · Sentinel-2`;
+    const val = d.fsca != null ? `${d.fsca.toFixed(1)} %` : noData;
+    return `${d.date}: ${t('detail.snow_label')} ${val} · ${t('detail.snow_source')}`;
   }
   const yearStr  = d.year === 'all' ? '2018–2025' : String(d.year);
-  const monthStr = MONTH_DE[d.month] ?? d.month;
+  const monthStr = t(`months.${d.month}_full`);
   const n        = d.scenesCount;
-  const scLabel  = `${n} Sentinel-2 ${n === 1 ? 'Szene' : 'Szenen'}`;
+  const scLabel  = `${n} ${n === 1 ? t('detail.scene') : t('detail.scenes')}`;
   if (d.type === 'snow') {
-    const val = d.value != null ? `${Number(d.value).toFixed(1)} %` : 'keine Daten';
-    return `${monthStr} ${yearStr}: fSCA ${val} · Berechnet aus ${scLabel}`;
+    const val = d.value != null ? `${Number(d.value).toFixed(1)} %` : noData;
+    return `${monthStr} ${yearStr}: fSCA ${val} · ${t('detail.from')} ${scLabel}`;
   }
-  const val = d.value != null ? `${d.value} mm` : 'keine Daten';
-  return `${monthStr} ${yearStr}: Niederschlag ${val} · SPARTACUS v2.1`;
+  const val = d.value != null ? `${d.value} mm` : noData;
+  return `${monthStr} ${yearStr}: ${t('detail.precip_label')} ${val} · ${t('detail.precip_source')}`;
 }
 
 // ── Component ──────────────────────────────────────────────────
@@ -397,6 +402,7 @@ export default function HydrologicalChart({
   temporalResolution  = 'monthly',
   onPointClick,
 }) {
+  const { t } = useLanguage();
   const chartData = useMemo(() => buildChartData(selectedYear), [selectedYear]);
 
   // ── Mobile breakpoint ────────────────────────────────────────
@@ -465,12 +471,12 @@ export default function HydrologicalChart({
             fontStyle="italic"
             fontFamily={MONO}
           >
-            no data
+            {t('chart.no_data')}
           </text>
         )}
       </g>
     );
-  }, [chartData]);
+  }, [chartData, t]);
 
   const popup = (activeDataDetail?.source === 'hydro-chart' || activeDataDetail?.source === 'hydro-individual')
     ? activeDataDetail
@@ -544,7 +550,11 @@ export default function HydrologicalChart({
             domain={[118, 275]}
             allowDataOverflow
             ticks={MONTH_STARTS.map(m => m.doy + 15)}
-            tickFormatter={v => isMobile ? doyToLabel(v + 5)[0] : doyToLabel(v + 5)}
+            tickFormatter={v => {
+              const key = doyToLabel(v + 5);
+              const label = t(`months.${key}`);
+              return isMobile ? label[0] : label;
+            }}
             tick={{ fill: C.textMuted, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
             axisLine={{ stroke: C.axis }}
             tickLine={false}
@@ -567,7 +577,7 @@ export default function HydrologicalChart({
               axisLine={false}
               tickLine={false}
               label={isMobile ? undefined : {
-                value: 'Niederschlag (mm)',
+                value: t('chart.precip_axis'),
                 angle: -90,
                 position: 'insideLeft',
                 offset: -32,
@@ -595,7 +605,7 @@ export default function HydrologicalChart({
               tickLine={false}
               tickFormatter={v => `${v}%`}
               label={isMobile ? undefined : {
-                value: 'Schneebedeckung (%)',
+                value: t('chart.snow_axis'),
                 angle: 90,
                 position: 'insideRight',
                 offset: -32,
@@ -615,7 +625,7 @@ export default function HydrologicalChart({
           {showPrecip && (
             <Scatter
               yAxisId="left"
-              name="Niederschlag (mm)"
+              name={t('chart.leg_precip_ind')}
               data={[]}
               fill={C.precip}
               isAnimationActive={false}
@@ -626,7 +636,7 @@ export default function HydrologicalChart({
           {showSnow && (
             <Scatter
               yAxisId="right"
-              name="Schneebedeckung (%)"
+              name={t('chart.leg_snow_ind')}
               data={snowData}
               fill={snowColor}
               opacity={0.9}
@@ -648,11 +658,11 @@ export default function HydrologicalChart({
           {showSnow && (
             <NoDataLineRight gapData={snowGapData} color={C.snowGap} />
           )}
-          {/* Invisible placeholder that injects the "Median (keine Daten)" legend entry */}
+          {/* Invisible placeholder that injects the legend entry for the gap line */}
           {showSnow && snowGapData?.hasGap && (
             <Scatter
               yAxisId="right"
-              name="Median (keine Daten)"
+              name={t('chart.leg_no_data')}
               data={[]}
               fill={C.snowGap}
               legendType="line"
@@ -677,18 +687,22 @@ export default function HydrologicalChart({
   // ── Render ───────────────────────────────────────────────────
   const isIndividual = temporalResolution === 'individual';
 
+  // Subtitle for the chart description paragraph
+  let subtitle;
+  if (isIndividual) {
+    if (activeCategory === 'snow')   subtitle = t('chart.sub_ind_snow',     { year: selectedYear });
+    else if (activeCategory === 'precip') subtitle = t('chart.sub_ind_precip', { year: selectedYear });
+    else                             subtitle = t('chart.sub_ind_combined', { year: selectedYear });
+  } else {
+    subtitle = isYearSpecific
+      ? t('chart.sub_year', { year: selectedYear })
+      : t('chart.sub_all');
+  }
+
   return (
     <div className="hydrological-chart">
       <p style={{ margin: '0 0 10px', fontSize: 13, color: C.textMuted }}>
-        {isIndividual
-          ? (activeCategory === 'snow'
-              ? `Sentinel-2 Szenen · Saison ${selectedYear}`
-              : activeCategory === 'precip'
-                ? `Tageswerte Niederschlag · Saison ${selectedYear} · nur Niederschlagstage`
-                : `Tageswerte Niederschlag & Sentinel-2 Szenen · Saison ${selectedYear}`)
-          : (isYearSpecific
-              ? `Jahresverlauf ${selectedYear} · Monatliche Messwerte`
-              : 'Monatsmittelwerte der Bewirtschaftungssaison · Streuung 2018–2025')}
+        {subtitle}
       </p>
 
       <div className="hydro-chart-wrap">
@@ -713,7 +727,10 @@ export default function HydrologicalChart({
               tick={{ fill: C.textMuted, fontSize: isMobile ? 10 : 12, fontFamily: MONO }}
               axisLine={{ stroke: C.axis }}
               tickLine={false}
-              tickFormatter={isMobile ? v => v[0] : undefined}
+              tickFormatter={v => {
+                const label = t(`months.${v}`);
+                return isMobile ? label[0] : label;
+              }}
             />
 
             {/* Left axis: Precipitation */}
@@ -727,7 +744,7 @@ export default function HydrologicalChart({
                 axisLine={false}
                 tickLine={false}
                 label={isMobile ? undefined : {
-                  value: 'Niederschlag (mm)',
+                  value: t('chart.precip_axis'),
                   angle: -90,
                   position: 'insideLeft',
                   offset: -32,
@@ -749,7 +766,7 @@ export default function HydrologicalChart({
                 tickLine={false}
                 tickFormatter={v => `${v}%`}
                 label={isMobile ? undefined : {
-                  value: 'Schneebedeckung (%)',
+                  value: t('chart.snow_axis'),
                   angle: 90,
                   position: 'insideRight',
                   offset: -32,
@@ -768,7 +785,7 @@ export default function HydrologicalChart({
                 stroke={C.vulnStroke}
                 strokeDasharray="4 3"
                 label={{
-                  value: 'Vulnerabilitätsphase',
+                  value: t('chart.vuln'),
                   position: 'insideTopRight',
                   fill: C.vulnLabel,
                   fontSize: 10,
@@ -798,7 +815,7 @@ export default function HydrologicalChart({
               <Bar
                 yAxisId="left"
                 dataKey="precipitation"
-                name="Mittlerer Niederschlag (mm)"
+                name={t('chart.leg_precip')}
                 fill={C.precip}
                 fillOpacity={0.75}
                 barSize={40}
@@ -823,7 +840,7 @@ export default function HydrologicalChart({
               <Area
                 yAxisId="right"
                 dataKey="snow"
-                name="Mittlere Schneebedeckung (%)"
+                name={t('chart.leg_snow')}
                 stroke={C.snow}
                 strokeWidth={2.5}
                 fill={C.snowFill}
@@ -845,7 +862,7 @@ export default function HydrologicalChart({
               <Line
                 yAxisId="right"
                 dataKey="snowInterp"
-                name="Schneebedeckung Median"
+                name={t('chart.leg_snow_median')}
                 stroke={C.snowGap}
                 strokeWidth={1.5}
                 strokeDasharray="5 5"
@@ -857,7 +874,6 @@ export default function HydrologicalChart({
                 isAnimationActive={false}
               />
             )}
-
 
             <Legend
               verticalAlign="bottom"
@@ -893,10 +909,10 @@ export default function HydrologicalChart({
             color:      '#e2e8f0',
             lineHeight: 1.5,
           }}>
-            {formatDetail(popup)}
+            {formatDetail(popup, t)}
           </p>
           <button
-            aria-label="Auswahl aufheben"
+            aria-label={t('panel.clear')}
             onClick={() => onPointClick?.(null)}
             style={{
               flexShrink:  0,

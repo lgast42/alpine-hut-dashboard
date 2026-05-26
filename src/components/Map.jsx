@@ -1,14 +1,15 @@
 import { useRef, useEffect, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import { useLanguage } from '../i18n/LanguageContext'
 
 const TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 if (TOKEN) mapboxgl.accessToken = TOKEN
 
 const STYLES = [
-  { id: 'terrain', label: 'Gelände', url: 'mapbox://styles/mapbox/outdoors-v12' },
-  { id: 'light',   label: 'Hell',    url: 'mapbox://styles/mapbox/light-v11' },
-  { id: 'sat',     label: 'Satellit', url: 'mapbox://styles/mapbox/satellite-streets-v12' },
+  { id: 'terrain', url: 'mapbox://styles/mapbox/outdoors-v12' },
+  { id: 'light',   url: 'mapbox://styles/mapbox/light-v11' },
+  { id: 'sat',     url: 'mapbox://styles/mapbox/satellite-streets-v12' },
 ]
 
 // Called on every style.load (initial + after setStyle)
@@ -44,32 +45,37 @@ function setupLayers(map) {
     paint: { 'circle-radius': 7, 'circle-color': '#2B6CB0', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } })
 }
 
-// Called once after initial load – listeners survive style changes
-function setupInteractions(map) {
-  const ps  = `font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;`
-  const pt  = `margin:0 0 4px;font-size:14px;font-weight:600;color:#2D3748;`
-  const pb  = `margin:0;color:#718096;`
+// Called once after initial load – listeners survive style changes.
+// tRef holds the current translation function; reading tRef.current inside
+// each click handler ensures popups always use the active language.
+function setupInteractions(map, tRef) {
+  const ps = `font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;`
+  const pt = `margin:0 0 4px;font-size:14px;font-weight:600;color:#2D3748;`
+  const pb = `margin:0;color:#718096;`
 
   map.on('click', 'hut', (e) => {
+    const t = tRef.current
     const coords = e.features[0].geometry.coordinates.slice()
     new mapboxgl.Popup({ offset: 12 })
       .setLngLat(coords)
-      .setHTML(`<div style="${ps}"><p style="${pt}">Neue Prager Hütte</p><p style="${pb}">2796 m ü.A. · DAV-Schutzhütte · Innergschlöß, Osttirol</p></div>`)
+      .setHTML(`<div style="${ps}"><p style="${pt}">${t('map.popup.hut_title')}</p><p style="${pb}">${t('map.popup.hut_desc')}</p></div>`)
       .addTo(map)
   })
 
   map.on('click', 'intake', (e) => {
+    const t = tRef.current
     const coords = e.features[0].geometry.coordinates.slice()
     new mapboxgl.Popup({ offset: 12 })
       .setLngLat(coords)
-      .setHTML(`<div style="${ps}"><p style="${pt}">Tankfassung / Quellfassung</p><p style="${pb}">2740 m ü.A. · Pour Point des Einzugsgebiets (2,10 ha)</p></div>`)
+      .setHTML(`<div style="${ps}"><p style="${pt}">${t('map.popup.intake_title')}</p><p style="${pb}">${t('map.popup.intake_desc')}</p></div>`)
       .addTo(map)
   })
 
   map.on('click', 'catchment-fill', (e) => {
+    const t = tRef.current
     new mapboxgl.Popup({ offset: 4 })
       .setLngLat(e.lngLat)
-      .setHTML(`<div style="${ps}"><p style="${pt}">Einzugsgebiet Quellfassung</p><p style="${pb}">Fläche: 2,10 ha · Blockschutt · Modelliert via GRASS GIS (MFD)</p><p style="${pb}">Validierung: Validierung gegen Referenzkartierung</p></div>`)
+      .setHTML(`<div style="${ps}"><p style="${pt}">${t('map.popup.catchment_title')}</p><p style="${pb}">${t('map.popup.catchment_desc1')}</p><p style="${pb}">${t('map.popup.catchment_desc2')}</p></div>`)
       .addTo(map)
   })
 
@@ -92,11 +98,17 @@ export default function Map({ onMapReady }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const [activeStyle, setActiveStyle] = useState('terrain')
+  const { t } = useLanguage()
+
+  // Keep a ref so popup click handlers always read the current language
+  // without needing to re-register listeners on every language switch.
+  const tRef = useRef(t)
+  useEffect(() => { tRef.current = t }, [t])
 
   if (!TOKEN) {
     return (
       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#EDF2F7', color: '#718096', fontSize: 14 }}>
-        VITE_MAPBOX_TOKEN fehlt – bitte in .env eintragen
+        {t('map.no_token')}
       </div>
     )
   }
@@ -113,7 +125,7 @@ export default function Map({ onMapReady }) {
     })
 
     map.on('style.load', () => setupLayers(map))
-    map.on('load', () => setupInteractions(map))
+    map.on('load', () => setupInteractions(map, tRef))
 
     mapRef.current = map
     onMapReady?.(map)
@@ -134,8 +146,8 @@ export default function Map({ onMapReady }) {
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
       <button
         onClick={handleHome}
-        title="Zur Standardansicht"
-        aria-label="Zur Standardansicht zurücksetzen"
+        title={t('map.home_title')}
+        aria-label={t('map.home_aria')}
         style={{
           position: 'absolute', bottom: 110, right: 10, zIndex: 1,
           width: 30, height: 30,
@@ -173,7 +185,7 @@ export default function Map({ onMapReady }) {
               transition: 'background 0.15s, color 0.15s',
             }}
           >
-            {s.label}
+            {t(`map.${s.id}`)}
           </button>
         ))}
       </div>
