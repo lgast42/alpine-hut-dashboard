@@ -490,7 +490,7 @@ export default function HydrologicalChart({
     const snowGapData  = computeSnowGapData(snowData);
 
     const chartMargin = isMobile
-      ? { top: 10, right: 5, bottom: 0, left: 0 }
+      ? { top: 10, right: 5, bottom: 0, left: 6 }
       : { top: 10, right: showSnow ? 48 : 24, bottom: 8, left: showPrecip ? 48 : 8 };
 
     return (
@@ -699,7 +699,7 @@ export default function HydrologicalChart({
           <ComposedChart
             data={chartData}
             margin={isMobile
-              ? { top: 10, right: 5, bottom: 0, left: 0 }
+              ? { top: 10, right: 5, bottom: 0, left: 6 }
               : { top: 10, right: 48, bottom: 8, left: 48 }}
             onClick={() => {
               if (justClickedRef.current) { justClickedRef.current = false; return; }

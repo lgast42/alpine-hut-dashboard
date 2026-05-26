@@ -400,19 +400,89 @@ body {
 .data-pane {
   display: flex;
   flex-direction: column;
-  flex: 0 0 40%;        /* fixed 40% of content-col height */
+  flex: 0 0 auto;       /* height set via inline style (panelHeight vh) */
   min-height: 0;
   overflow: hidden;
   background: var(--glass-light);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   border-top: 1px solid var(--border);
-  transition: flex-basis 0.3s ease-in-out, border-top-color 0.3s ease-in-out;
+  transition: height 0.3s ease-in-out, border-top-color 0.3s ease-in-out;
 }
 
 .data-pane--closed {
-  flex-basis: 0;
+  height: 0 !important;  /* overrides inline style during collapse */
   border-top-color: transparent;
+}
+
+/* ── Panel Drag Handle ───────────────────────────────────── */
+.panel-drag-handle {
+  flex: 0 0 auto;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: ns-resize;
+  background: transparent;
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+  touch-action: none;   /* prevents page scroll while dragging on touch */
+}
+
+.panel-drag-handle:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+/* Centred double-bar pill indicator */
+.panel-drag-indicator {
+  width: 28px;
+  height: 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.panel-drag-indicator::before,
+.panel-drag-indicator::after {
+  content: '';
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--text-3);
+  opacity: 0.55;
+}
+
+.panel-drag-handle:hover .panel-drag-indicator::before,
+.panel-drag-handle:hover .panel-drag-indicator::after {
+  opacity: 0.9;
+}
+
+/* Minimise button sitting on the drag handle (right side) */
+.panel-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text-3);
+  cursor: pointer;
+  transition: background var(--t), border-color var(--t), color var(--t);
+}
+
+.panel-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: var(--border-2);
+  color: var(--text-2);
 }
 
 /* ── Pane Divider (bottom of map pane — houses the toggle) ─ */
@@ -442,27 +512,7 @@ body {
   transition: background var(--t), border-color var(--t), color var(--t);
 }
 
-/* Open state: ultra-flat ↓ handle at the map/data boundary */
-.data-panel-toggle--open {
-  width: 48px;
-  height: 20px;
-  background: rgba(20, 28, 42, 0.70);
-  backdrop-filter: var(--blur-sm);
-  -webkit-backdrop-filter: var(--blur-sm);
-  border: 1px solid var(--border);
-  border-bottom: none;
-  border-radius: var(--radius-xs) var(--radius-xs) 0 0;
-  color: var(--text-3);
-  font-size: 10px;
-}
-
-.data-panel-toggle--open:hover {
-  background: rgba(30, 42, 60, 0.90);
-  border-color: var(--border-2);
-  color: var(--text-2);
-}
-
-/* Closed state: "↑ Daten" tab floating at the screen bottom */
+/* Minimised state: "↑ Daten" tab floating at the screen bottom */
 .data-panel-toggle--closed {
   height: 30px;
   padding: 0 18px;
@@ -825,7 +875,9 @@ body {
 
 @media (max-width: 767px) {
   .hydro-chart-wrap {
-    height: 260px;
+    height: 22vh;       /* viewport-relativ statt fixe Pixel */
+    min-height: 130px;  /* nie zu klein auf Kompaktgeräten   */
+    max-height: 240px;  /* nie zu groß auf grossen Phones    */
   }
   .hydro-chart-wrap .recharts-cartesian-axis-tick text {
     font-size: 10px !important;

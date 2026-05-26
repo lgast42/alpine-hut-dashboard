@@ -28,7 +28,8 @@ function applyMapPadding(map) {
 }
 
 export default function App() {
-  const [dataOpen,  setDataOpen]  = useState(true)
+  const [panelHeight,    setPanelHeight]    = useState(40)   // % of viewport, 10–85
+  const [panelMinimized, setPanelMinimized] = useState(false)
   const [sideOpen,  setSideOpen]  = useState(true)
   const [legendOpen,   setLegendOpen]   = useState(() => window.innerWidth >= 768)
   const [aboutOpen,    setAboutOpen]    = useState(false)
@@ -47,6 +48,8 @@ export default function App() {
   useEffect(() => { setActiveDataDetail(null) }, [activeCategory, selectedYear, temporalResolution])
 
   const mapRef          = useRef(null)
+  const dataPaneRef     = useRef(null)
+  const dragRef         = useRef({ active: false, startY: 0, startHeight: 40, currentHeight: 40 })
   const layerVisibleRef = useRef(layerVisible)
   useEffect(() => { layerVisibleRef.current = layerVisible }, [layerVisible])
 
@@ -80,7 +83,7 @@ export default function App() {
     }
     raf = requestAnimationFrame(step)
     return () => cancelAnimationFrame(raf)
-  }, [dataOpen, sideOpen])
+  }, [panelMinimized, sideOpen])
 
   // Resize + re-pad on window resize
   useEffect(() => {
@@ -91,6 +94,42 @@ export default function App() {
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
+
+  // ── Panel drag handlers ───────────────────────────────────
+  function handleDragStart(e) {
+    // Let the minimize button handle its own click
+    if (e.target.closest('.panel-toggle-btn')) return
+    dragRef.current = {
+      active: true,
+      startY: e.clientY,
+      startHeight: panelHeight,
+      currentHeight: panelHeight,
+    }
+    // Suppress CSS transition so direct DOM height updates feel instant
+    if (dataPaneRef.current) dataPaneRef.current.style.transition = 'none'
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+
+  function handleDragMove(e) {
+    if (!dragRef.current.active) return
+    const dy    = dragRef.current.startY - e.clientY        // dragging up = positive
+    const dPct  = (dy / window.innerHeight) * 100
+    const newH  = Math.min(85, Math.max(10, dragRef.current.startHeight + dPct))
+    dragRef.current.currentHeight = newH
+    // Update height directly on the DOM — no re-render lag during drag
+    if (dataPaneRef.current) dataPaneRef.current.style.height = `${newH}vh`
+    mapRef.current?.resize()
+  }
+
+  function handleDragEnd() {
+    if (!dragRef.current.active) return
+    dragRef.current.active = false
+    // Re-enable CSS transition before committing state
+    if (dataPaneRef.current) dataPaneRef.current.style.transition = ''
+    // Commit final height to React state (one re-render, syncs inline style)
+    setPanelHeight(dragRef.current.currentHeight)
+    setPanelMinimized(false)
+  }
 
   function handleMapReady(map) {
     mapRef.current = map
@@ -203,24 +242,46 @@ export default function App() {
               )}
             </div>
 
-            {/* Data-panel toggle — sits at the map/data boundary */}
-            <div className="pane-divider">
-              <button
-                className={`data-panel-toggle${dataOpen ? ' data-panel-toggle--open' : ' data-panel-toggle--closed'}`}
-                onClick={() => setDataOpen(v => !v)}
-                aria-label={dataOpen ? 'Datenpanel minimieren' : 'Datenpanel öffnen'}
-                aria-expanded={dataOpen}
-              >
-                {dataOpen
-                  ? <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                  : <><svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M9 5L5 1 1 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg> Daten</>
-                }
-              </button>
-            </div>
+            {/* Floating tab — visible only when panel is minimised */}
+            {panelMinimized && (
+              <div className="pane-divider">
+                <button
+                  className="data-panel-toggle data-panel-toggle--closed"
+                  onClick={() => setPanelMinimized(false)}
+                  aria-label="Datenpanel öffnen"
+                  aria-expanded={false}
+                >
+                  <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M9 5L5 1 1 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  {' '}Daten
+                </button>
+              </div>
+            )}
           </div>
 
           {/* DATA PANE */}
-          <div className={`data-pane${dataOpen ? '' : ' data-pane--closed'}`}>
+          <div
+            className={`data-pane${panelMinimized ? ' data-pane--closed' : ''}`}
+            style={panelMinimized ? { height: 0 } : { height: `${panelHeight}vh` }}
+            ref={dataPaneRef}
+          >
+
+            {/* ── Drag Handle ──────────────────────────────── */}
+            <div
+              className="panel-drag-handle"
+              onPointerDown={handleDragStart}
+              onPointerMove={handleDragMove}
+              onPointerUp={handleDragEnd}
+              onPointerCancel={handleDragEnd}
+            >
+              <span className="panel-drag-indicator" aria-hidden="true" />
+              <button
+                className="panel-toggle-btn"
+                onClick={() => setPanelMinimized(true)}
+                aria-label="Datenpanel minimieren"
+              >
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true"><path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
 
             {/* ── Data pane header ─────────────────────────── */}
             <div className="data-pane-header">
