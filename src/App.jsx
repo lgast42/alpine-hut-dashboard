@@ -166,22 +166,33 @@ export default function App() {
 
       {/* ── Header ───────────────────────────────────────── */}
       <header className="app-header">
-        <div className="header-brand">
-          <div className="header-title">
-            <h1>{t('header.title')}</h1>
-            <p className="header-subtitle">{t('header.subtitle')}</p>
-          </div>
+
+        {/* Left: PoC badge + project title */}
+        <div className="header-left">
+          <span className="project-badge">PoC</span>
+          <h1 className="header-project-title">{t('ui.headerTitle')}</h1>
         </div>
-        <span className="header-badge">{t('header.badge')}</span>
-        <button
-          className="lang-toggle-btn"
-          onClick={toggleLang}
-          aria-label="Toggle language"
-        >
-          <span className={lang === 'en' ? 'active' : ''}>EN</span>
-          {' | '}
-          <span className={lang === 'de' ? 'active' : ''}>DE</span>
-        </button>
+
+        {/* Center: hut identity */}
+        <div className="header-center">
+          <span className="hut-name-desktop">{t('ui.hutFull')}</span>
+          <span className="hut-name-mobile">{t('ui.hutShort')}</span>
+          <span className="hut-elevation">2,796 m</span>
+        </div>
+
+        {/* Right: language toggle */}
+        <div className="header-right">
+          <button
+            className="lang-toggle-btn"
+            onClick={toggleLang}
+            aria-label="Toggle language"
+          >
+            <span className={lang === 'en' ? 'is-active' : ''}>EN</span>
+            {' | '}
+            <span className={lang === 'de' ? 'is-active' : ''}>DE</span>
+          </button>
+        </div>
+
       </header>
 
       {/* ── Main Layout ──────────────────────────────────── */}

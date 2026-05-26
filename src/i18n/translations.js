@@ -1,5 +1,10 @@
 export const translations = {
   en: {
+    ui: {
+      headerTitle: 'Hydro-Monitor',
+      hutShort:    'NPH',
+      hutFull:     'Neue Prager Hütte',
+    },
     header: {
       title:    'Hydrological Resilience of Alpine Huts',
       subtitle: 'Neue Prager Hütte · 2796 m · Innergschlöß, East Tyrol',
@@ -107,6 +112,11 @@ export const translations = {
   },
 
   de: {
+    ui: {
+      headerTitle: 'Hydro-Monitor',
+      hutShort:    'NPH',
+      hutFull:     'Neue Prager Hütte',
+    },
     header: {
       title:    'Hydrologische Resilienz alpiner Schutzhütten',
       subtitle: 'Neue Prager Hütte · 2796 m · Innergschlöß, Osttirol',
