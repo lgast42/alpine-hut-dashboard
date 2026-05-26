@@ -30,7 +30,7 @@ function applyMapPadding(map) {
 export default function App() {
   const [dataOpen,  setDataOpen]  = useState(true)
   const [sideOpen,  setSideOpen]  = useState(true)
-  const [legendOpen,   setLegendOpen]   = useState(true)
+  const [legendOpen,   setLegendOpen]   = useState(() => window.innerWidth >= 768)
   const [aboutOpen,    setAboutOpen]    = useState(false)
   const [layerVisible, setLayerVisible] = useState(
     Object.fromEntries(LAYER_DEFS.map(l => [l.key, true]))

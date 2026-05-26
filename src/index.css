@@ -540,6 +540,30 @@ body {
   .map-legend-overlay { display: none; }
 }
 
+/* Compact legend overlay on mobile */
+@media (max-width: 767px) {
+  .map-legend-overlay {
+    max-width: 175px;
+  }
+  .map-legend-overlay .legend-toggle-btn {
+    padding: 4px 8px;
+  }
+  .map-legend-overlay .legend-list {
+    padding: 3px 8px 5px;
+    gap: 3px;
+  }
+  .map-legend-overlay .legend-list li label {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    gap: 6px;
+  }
+  .map-legend-overlay .legend-swatch {
+    width: 11px;
+    height: 11px;
+    flex: 0 0 11px;
+  }
+}
+
 /* ── Data Pane Header ────────────────────────────────────── */
 .data-pane-header {
   flex: 0 0 auto;
