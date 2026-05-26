@@ -11,7 +11,6 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
   ErrorBar,
@@ -421,10 +420,6 @@ export default function HydrologicalChart({
   const showSnow       = activeCategory !== 'precip';
   const showPrecip     = activeCategory !== 'snow';
   const isYearSpecific = selectedYear !== 'all';
-  // Vulnerability overlay only makes sense for the combined multi-year view
-  const showVulnArea   = selectedYear === 'all' && activeCategory === 'combined';
-
-  const refAreaAxisId = showPrecip ? 'left' : 'right';
 
   // ── Click handler ────────────────────────────────────────────
   function handleClick(data, type) {
@@ -485,8 +480,7 @@ export default function HydrologicalChart({
   // ── Individual-view chart ────────────────────────────────────
   // Always single-year (App enforces: Einzelwerte ↔ "Alle" are mutually exclusive).
   function renderIndividualChart() {
-    const yearEntry  = YEARS.find(y => y.year === selectedYear);
-    const snowColor  = yearEntry?.color ?? C.textPrimary;
+    const snowColor  = C.snow;
     const refAxisId  = showPrecip ? 'left' : 'right';
 
     // Precipitation: non-zero days only, always blue regardless of year
@@ -771,25 +765,6 @@ export default function HydrologicalChart({
                   position: 'insideRight',
                   offset: -32,
                   style: { fill: C.snow, fontSize: 11, fontFamily: MONO },
-                }}
-              />
-            )}
-
-            {/* Vulnerability phase — only combined all-years view */}
-            {showVulnArea && (
-              <ReferenceArea
-                yAxisId={refAreaAxisId}
-                x1="Jul"
-                x2="Sep"
-                fill={C.vulnFill}
-                stroke={C.vulnStroke}
-                strokeDasharray="4 3"
-                label={{
-                  value: t('chart.vuln'),
-                  position: 'insideTopRight',
-                  fill: C.vulnLabel,
-                  fontSize: 10,
-                  fontStyle: 'italic',
                 }}
               />
             )}

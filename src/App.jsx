@@ -31,23 +31,23 @@ function applyMapPadding(map) {
 export default function App() {
   const { lang, toggleLang, t } = useLanguage()
 
-  const [panelHeight,    setPanelHeight]    = useState(40)   // % of viewport, 10–85
+  const [panelHeight,    setPanelHeight]    = useState(40)
   const [panelMinimized, setPanelMinimized] = useState(false)
-  const [sideOpen,  setSideOpen]  = useState(true)
-  const [legendOpen,   setLegendOpen]   = useState(() => window.innerWidth >= 768)
-  const [aboutOpen,    setAboutOpen]    = useState(false)
-  const [layerVisible, setLayerVisible] = useState(
+  const [sideOpen,       setSideOpen]       = useState(true)
+  const [legendOpen,     setLegendOpen]     = useState(() => window.innerWidth >= 768)
+  const [aboutOpen,      setAboutOpen]      = useState(false)
+  const [infoModalOpen,  setInfoModalOpen]  = useState(false)
+  const [layerVisible,   setLayerVisible]   = useState(
     Object.fromEntries(LAYER_DEFS.map(l => [l.key, true]))
   )
 
   // ── Data-panel state ───────────────────────────────────────
-  const [viewMode,           setViewMode]           = useState('chart')    // 'chart' | 'table'
-  const [activeCategory,     setActiveCategory]     = useState('combined') // 'combined' | 'snow' | 'precip'
-  const [selectedYear,       setSelectedYear]       = useState('all')      // 'all' | 2018..2025
-  const [activeDataDetail,   setActiveDataDetail]   = useState(null)       // clicked data point
-  const [temporalResolution, setTemporalResolution] = useState('monthly')  // 'monthly' | 'individual'
+  const [viewMode,           setViewMode]           = useState('chart')
+  const [activeCategory,     setActiveCategory]     = useState('combined')
+  const [selectedYear,       setSelectedYear]       = useState('all')
+  const [activeDataDetail,   setActiveDataDetail]   = useState(null)
+  const [temporalResolution, setTemporalResolution] = useState('monthly')
 
-  // Reset drill-down selection whenever the filter axes change
   useEffect(() => { setActiveDataDetail(null) }, [activeCategory, selectedYear, temporalResolution])
 
   const mapRef          = useRef(null)
@@ -56,7 +56,6 @@ export default function App() {
   const layerVisibleRef = useRef(layerVisible)
   useEffect(() => { layerVisibleRef.current = layerVisible }, [layerVisible])
 
-  // Reapply layer visibility after every style reload
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
@@ -72,14 +71,12 @@ export default function App() {
     return () => map.off('style.load', reapply)
   }, [])
 
-  // Drive map.resize() every frame for the full transition duration so the
-  // Mapbox canvas tracks the growing/shrinking container smoothly.
+  // Drive map.resize() for the full CSS-transition duration
   useEffect(() => {
     if (!mapRef.current) return
-    const DURATION = 350 // slightly longer than the 0.3s CSS transition
+    const DURATION = 350
     const start = performance.now()
     let raf
-
     function step(now) {
       mapRef.current?.resize()
       if (now - start < DURATION) raf = requestAnimationFrame(step)
@@ -88,7 +85,6 @@ export default function App() {
     return () => cancelAnimationFrame(raf)
   }, [panelMinimized, sideOpen])
 
-  // Resize + re-pad on window resize
   useEffect(() => {
     function onResize() {
       mapRef.current?.resize()
@@ -100,26 +96,33 @@ export default function App() {
 
   // ── Panel drag handlers ───────────────────────────────────
   function handleDragStart(e) {
-    // Let the minimize button handle its own click
     if (e.target.closest('.panel-toggle-btn')) return
+    // ── Fix #2: disable all map interactions so the map never
+    //    receives the touch gesture as a zoom/pan during drag ──
+    if (mapRef.current) {
+      mapRef.current.dragPan.disable()
+      mapRef.current.touchZoomRotate.disable()
+      mapRef.current.scrollZoom.disable()
+      // Belt-and-suspenders: cut pointer events to the GL canvas
+      const canvas = mapRef.current.getCanvas()
+      if (canvas) canvas.style.pointerEvents = 'none'
+    }
     dragRef.current = {
       active: true,
       startY: e.clientY,
       startHeight: panelHeight,
       currentHeight: panelHeight,
     }
-    // Suppress CSS transition so direct DOM height updates feel instant
     if (dataPaneRef.current) dataPaneRef.current.style.transition = 'none'
     e.currentTarget.setPointerCapture(e.pointerId)
   }
 
   function handleDragMove(e) {
     if (!dragRef.current.active) return
-    const dy    = dragRef.current.startY - e.clientY        // dragging up = positive
-    const dPct  = (dy / window.innerHeight) * 100
-    const newH  = Math.min(85, Math.max(10, dragRef.current.startHeight + dPct))
+    const dy   = dragRef.current.startY - e.clientY
+    const dPct = (dy / window.innerHeight) * 100
+    const newH = Math.min(85, Math.max(10, dragRef.current.startHeight + dPct))
     dragRef.current.currentHeight = newH
-    // Update height directly on the DOM — no re-render lag during drag
     if (dataPaneRef.current) dataPaneRef.current.style.height = `${newH}vh`
     mapRef.current?.resize()
   }
@@ -127,9 +130,15 @@ export default function App() {
   function handleDragEnd() {
     if (!dragRef.current.active) return
     dragRef.current.active = false
-    // Re-enable CSS transition before committing state
+    // Re-enable map interactions
+    if (mapRef.current) {
+      mapRef.current.dragPan.enable()
+      mapRef.current.touchZoomRotate.enable()
+      mapRef.current.scrollZoom.enable()
+      const canvas = mapRef.current.getCanvas()
+      if (canvas) canvas.style.pointerEvents = ''
+    }
     if (dataPaneRef.current) dataPaneRef.current.style.transition = ''
-    // Commit final height to React state (one re-render, syncs inline style)
     setPanelHeight(dragRef.current.currentHeight)
     setPanelMinimized(false)
   }
@@ -143,6 +152,13 @@ export default function App() {
     setLayerVisible(prev => ({ ...prev, [def.key]: checked }))
     const vis = checked ? 'visible' : 'none'
     def.ids.forEach(id => mapRef.current?.setLayoutProperty(id, 'visibility', vis))
+  }
+
+  // ── Mobile year-select change (keeps monthly/individual consistent) ──
+  function handleMobileYearChange(e) {
+    const y = e.target.value === 'all' ? 'all' : Number(e.target.value)
+    setSelectedYear(y)
+    if (y === 'all') setTemporalResolution('monthly')
   }
 
   return (
@@ -185,6 +201,7 @@ export default function App() {
           </div>
 
           <div className="sidepanel-content">
+            {/* Layer legend */}
             <div className={`layer-legend ${legendOpen ? 'open' : ''}`}>
               <button className="legend-toggle-btn" onClick={() => setLegendOpen(v => !v)}>
                 <span>{t('side.layers.heading')}</span>
@@ -209,7 +226,8 @@ export default function App() {
               )}
             </div>
 
-            <div className={`about-accordion ${aboutOpen ? 'open' : ''}`}>
+            {/* ── Fix #1a: About pushed to bottom of sidepanel ── */}
+            <div className={`about-accordion sidepanel-about ${aboutOpen ? 'open' : ''}`}>
               <button className="about-toggle" onClick={() => setAboutOpen(v => !v)}>
                 <span>{t('side.about.heading')}</span>
                 <span>{aboutOpen ? '▴' : '▾'}</span>
@@ -254,6 +272,19 @@ export default function App() {
               )}
             </div>
 
+            {/* ── Fix #1b: Mobile info button ────────────── */}
+            <button
+              className="map-info-btn"
+              onClick={() => setInfoModalOpen(true)}
+              aria-label={t('side.about.heading')}
+            >
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <circle cx="7" cy="7" r="6.3" stroke="currentColor" strokeWidth="1.4"/>
+                <circle cx="7" cy="4.4" r="0.9" fill="currentColor"/>
+                <path d="M7 6.5v4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+              </svg>
+            </button>
+
             {/* Floating tab — visible only when panel is minimised */}
             {panelMinimized && (
               <div className="pane-divider">
@@ -276,7 +307,6 @@ export default function App() {
             style={panelMinimized ? { height: 0 } : { height: `${panelHeight}vh` }}
             ref={dataPaneRef}
           >
-
             {/* ── Drag Handle ──────────────────────────────── */}
             <div
               className="panel-drag-handle"
@@ -297,118 +327,173 @@ export default function App() {
 
             {/* ── Data pane header ─────────────────────────── */}
             <div className="data-pane-header">
-
-              {/* Title row */}
               <div className="data-header-row">
                 <h2>{t('panel.heading')}</h2>
               </div>
 
-              {/* Control bar */}
+              {/* ── Fix #4: controls restructured ─────────────────── */}
               <div className="data-controls">
 
-                {/* Top row: view toggle + category pills */}
-                <div className="data-controls-top">
+                {/* Mobile: compact 2×2 dropdown grid */}
+                <div className="data-controls-mobile">
+                  <div className="mobile-select-grid">
 
-                  {/* View toggle */}
-                  <div className="ctrl-seg" role="group" aria-label={t('panel.view_label')}>
-                    <button
-                      className={`ctrl-seg-btn${viewMode === 'chart' ? ' ctrl-seg-btn--active' : ''}`}
-                      aria-pressed={viewMode === 'chart'}
-                      onClick={() => setViewMode('chart')}
-                    >
-                      {t('panel.chart')}
-                    </button>
-                    <button
-                      className={`ctrl-seg-btn${viewMode === 'table' ? ' ctrl-seg-btn--active' : ''}`}
-                      aria-pressed={viewMode === 'table'}
-                      onClick={() => {
-                        if (activeCategory === 'combined') setActiveCategory('snow')
-                        setViewMode('table')
+                    {/* View */}
+                    <select
+                      className="mobile-select"
+                      value={viewMode}
+                      onChange={e => {
+                        if (e.target.value === 'table' && activeCategory === 'combined') setActiveCategory('snow')
+                        setViewMode(e.target.value)
                       }}
                     >
-                      {t('panel.table')}
-                    </button>
-                  </div>
+                      <option value="chart">{t('panel.chart')}</option>
+                      <option value="table">{t('panel.table')}</option>
+                    </select>
 
-                  {/* Category filter */}
-                  <div className="ctrl-pills" role="group" aria-label={t('panel.category_label')}>
-                    {CATEGORIES.filter(c => viewMode === 'chart' || c.id !== 'combined').map(c => (
-                      <button
-                        key={c.id}
-                        className={`ctrl-pill${activeCategory === c.id ? ' ctrl-pill--active' : ''}`}
-                        aria-pressed={activeCategory === c.id}
-                        onClick={() => setActiveCategory(c.id)}
-                      >
-                        {t(`panel.${c.id}`)}
-                      </button>
-                    ))}
-                  </div>
+                    {/* Category */}
+                    <select
+                      className="mobile-select"
+                      value={activeCategory}
+                      onChange={e => setActiveCategory(e.target.value)}
+                    >
+                      {CATEGORIES
+                        .filter(c => viewMode === 'chart' || c.id !== 'combined')
+                        .map(c => (
+                          <option key={c.id} value={c.id}>{t(`panel.${c.id}`)}</option>
+                        ))}
+                    </select>
 
-                  {/* Temporal resolution toggle — chart mode only.
-                      "Individual" is hidden when "All" years is selected (incompatible). */}
-                  {viewMode === 'chart' && (
-                    <div className="ctrl-seg ctrl-seg--resolution" role="group" aria-label={t('panel.resolution_label')}>
-                      <button
-                        className={`ctrl-seg-btn${temporalResolution === 'monthly' ? ' ctrl-seg-btn--active' : ''}`}
-                        aria-pressed={temporalResolution === 'monthly'}
-                        onClick={() => setTemporalResolution('monthly')}
-                        title={t('panel.monthly_title')}
+                    {/* Year (chart mode only) */}
+                    {viewMode === 'chart' && (
+                      <select
+                        className="mobile-select"
+                        value={String(selectedYear)}
+                        onChange={handleMobileYearChange}
                       >
-                        {t('panel.monthly')}
+                        {YEAR_OPTIONS
+                          .filter(y => !(y === 'all' && temporalResolution === 'individual'))
+                          .map(y => (
+                            <option key={y} value={String(y)}>
+                              {y === 'all' ? t('panel.all') : y}
+                            </option>
+                          ))}
+                      </select>
+                    )}
+
+                    {/* Resolution (chart mode only) */}
+                    {viewMode === 'chart' && (
+                      <select
+                        className="mobile-select"
+                        value={temporalResolution}
+                        onChange={e => setTemporalResolution(e.target.value)}
+                      >
+                        <option value="monthly">{t('panel.monthly')}</option>
+                        {selectedYear !== 'all' && (
+                          <option value="individual">{t('panel.individual')}</option>
+                        )}
+                      </select>
+                    )}
+
+                  </div>
+                </div>{/* /data-controls-mobile */}
+
+                {/* Desktop: pill/segmented controls (unchanged layout) */}
+                <div className="data-controls-desktop">
+
+                  <div className="data-controls-top">
+                    <div className="ctrl-seg" role="group" aria-label={t('panel.view_label')}>
+                      <button
+                        className={`ctrl-seg-btn${viewMode === 'chart' ? ' ctrl-seg-btn--active' : ''}`}
+                        aria-pressed={viewMode === 'chart'}
+                        onClick={() => setViewMode('chart')}
+                      >
+                        {t('panel.chart')}
                       </button>
-                      {selectedYear !== 'all' && (
+                      <button
+                        className={`ctrl-seg-btn${viewMode === 'table' ? ' ctrl-seg-btn--active' : ''}`}
+                        aria-pressed={viewMode === 'table'}
+                        onClick={() => {
+                          if (activeCategory === 'combined') setActiveCategory('snow')
+                          setViewMode('table')
+                        }}
+                      >
+                        {t('panel.table')}
+                      </button>
+                    </div>
+
+                    <div className="ctrl-pills" role="group" aria-label={t('panel.category_label')}>
+                      {CATEGORIES.filter(c => viewMode === 'chart' || c.id !== 'combined').map(c => (
                         <button
-                          className={`ctrl-seg-btn${temporalResolution === 'individual' ? ' ctrl-seg-btn--active' : ''}`}
-                          aria-pressed={temporalResolution === 'individual'}
-                          onClick={() => setTemporalResolution('individual')}
-                          title={t('panel.individual_title')}
+                          key={c.id}
+                          className={`ctrl-pill${activeCategory === c.id ? ' ctrl-pill--active' : ''}`}
+                          aria-pressed={activeCategory === c.id}
+                          onClick={() => setActiveCategory(c.id)}
                         >
-                          {t('panel.individual')}
+                          {t(`panel.${c.id}`)}
                         </button>
-                      )}
+                      ))}
+                    </div>
+
+                    {viewMode === 'chart' && (
+                      <div className="ctrl-seg ctrl-seg--resolution" role="group" aria-label={t('panel.resolution_label')}>
+                        <button
+                          className={`ctrl-seg-btn${temporalResolution === 'monthly' ? ' ctrl-seg-btn--active' : ''}`}
+                          aria-pressed={temporalResolution === 'monthly'}
+                          onClick={() => setTemporalResolution('monthly')}
+                          title={t('panel.monthly_title')}
+                        >
+                          {t('panel.monthly')}
+                        </button>
+                        {selectedYear !== 'all' && (
+                          <button
+                            className={`ctrl-seg-btn${temporalResolution === 'individual' ? ' ctrl-seg-btn--active' : ''}`}
+                            aria-pressed={temporalResolution === 'individual'}
+                            onClick={() => setTemporalResolution('individual')}
+                            title={t('panel.individual_title')}
+                          >
+                            {t('panel.individual')}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>{/* /data-controls-top */}
+
+                  {viewMode !== 'table' && (
+                    <div className="year-strip" role="group" aria-label={t('panel.year_label')}>
+                      {YEAR_OPTIONS
+                        .filter(y => !(y === 'all' && temporalResolution === 'individual'))
+                        .map(y => (
+                          <button
+                            key={y}
+                            className={`year-pill${selectedYear === y ? ' year-pill--active' : ''}`}
+                            aria-pressed={selectedYear === y}
+                            onClick={() => setSelectedYear(y)}
+                          >
+                            {y === 'all' ? t('panel.all') : y}
+                          </button>
+                        ))}
                     </div>
                   )}
 
-                </div>{/* /data-controls-top */}
-
-                {/* Year strip — hidden in table mode (table always shows all years);
-                    "All" is also hidden when Individual is active (incompatible). */}
-                {viewMode !== 'table' && (
-                  <div className="year-strip" role="group" aria-label={t('panel.year_label')}>
-                    {YEAR_OPTIONS
-                      .filter(y => !(y === 'all' && temporalResolution === 'individual'))
-                      .map(y => (
-                      <button
-                        key={y}
-                        className={`year-pill${selectedYear === y ? ' year-pill--active' : ''}`}
-                        aria-pressed={selectedYear === y}
-                        onClick={() => setSelectedYear(y)}
-                      >
-                        {y === 'all' ? t('panel.all') : y}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                </div>{/* /data-controls-desktop */}
 
               </div>{/* /data-controls */}
             </div>{/* /data-pane-header */}
 
             {/* ── Data pane content ────────────────────────── */}
             <div className="data-pane-inner">
-
               {viewMode === 'chart' && (
-                <>
-                  <div className="data-section">
-                    <p className="panel-heading">{t('panel.heading_chart')}</p>
-                    <HydrologicalChart
-                      activeCategory={activeCategory}
-                      selectedYear={selectedYear}
-                      activeDataDetail={activeDataDetail}
-                      temporalResolution={temporalResolution}
-                      onPointClick={setActiveDataDetail}
-                    />
-                  </div>
-                </>
+                <div className="data-section">
+                  <p className="panel-heading">{t('panel.heading_chart')}</p>
+                  <HydrologicalChart
+                    activeCategory={activeCategory}
+                    selectedYear={selectedYear}
+                    activeDataDetail={activeDataDetail}
+                    temporalResolution={temporalResolution}
+                    onPointClick={setActiveDataDetail}
+                  />
+                </div>
               )}
 
               {viewMode === 'table' && (
@@ -424,12 +509,31 @@ export default function App() {
                   </div>
                 </div>
               )}
-
-            </div>{/* /data-pane-inner */}
+            </div>
           </div>{/* /data-pane */}
 
         </div>
       </div>
+
+      {/* ── Fix #1b: About modal (all viewports, triggered by mobile ℹ button) */}
+      {infoModalOpen && (
+        <div className="info-modal-backdrop" onClick={() => setInfoModalOpen(false)}>
+          <div className="info-modal" onClick={e => e.stopPropagation()}>
+            <div className="info-modal-header">
+              <h3>{t('side.about.heading')}</h3>
+              <button
+                className="info-modal-close"
+                onClick={() => setInfoModalOpen(false)}
+                aria-label={t('panel.clear')}
+              >
+                ✕
+              </button>
+            </div>
+            <p>{t('side.about.text')}</p>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }
