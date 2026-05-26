@@ -85,6 +85,125 @@ const SNOW_BY_YEAR = Object.fromEntries(
   YEARS.map(({ year }) => [year, sceneData.filter(d => d.year === year)])
 );
 
+// ── Individual-view gap interpolation ─────────────────────────
+// Monthly median fSCA values used as fallback for months with no Sentinel-2 data.
+const MONTH_MEDIANS_DOY = [
+  { startDoy: 121, endDoy: 151, centerDoy: 136, label: 'Mai', median: 84 },
+  { startDoy: 152, endDoy: 181, centerDoy: 166, label: 'Jun', median: 63 },
+  { startDoy: 182, endDoy: 212, centerDoy: 197, label: 'Jul', median: 22 },
+  { startDoy: 213, endDoy: 243, centerDoy: 228, label: 'Aug', median:  6 },
+  { startDoy: 244, endDoy: 275, centerDoy: 259, label: 'Sep', median:  1 },
+];
+
+/**
+ * Compute which months lack Sentinel-2 coverage at the start/end of the season
+ * and return dashed-line segments (with bridge endpoints) for those gaps.
+ */
+function computeSnowGapData(snowData) {
+  if (!snowData || snowData.length === 0) {
+    return {
+      fullGap:      MONTH_MEDIANS_DOY.map(m => ({ doy: m.centerDoy, fsca: m.median })),
+      startSegment: null,
+      endSegment:   null,
+      hasGap:       true,
+    };
+  }
+  const sorted   = [...snowData].sort((a, b) => a.doy - b.doy);
+  const firstDoy = sorted[0].doy;
+  const lastDoy  = sorted.at(-1).doy;
+
+  const startMissing = MONTH_MEDIANS_DOY.filter(m => m.endDoy < firstDoy);
+  const endMissing   = MONTH_MEDIANS_DOY.filter(m => m.startDoy > lastDoy);
+
+  const startSegment = startMissing.length > 0
+    ? [...startMissing.map(m => ({ doy: m.centerDoy, fsca: m.median })),
+       { doy: sorted[0].doy, fsca: sorted[0].fsca }]
+    : null;
+  const endSegment = endMissing.length > 0
+    ? [{ doy: sorted.at(-1).doy, fsca: sorted.at(-1).fsca },
+       ...endMissing.map(m => ({ doy: m.centerDoy, fsca: m.median }))]
+    : null;
+
+  return {
+    fullGap:      null,
+    startSegment,
+    endSegment,
+    hasGap:       startMissing.length > 0 || endMissing.length > 0,
+  };
+}
+
+/**
+ * Renders dashed median-interpolation lines for missing months at the edges of
+ * the snow season in the individual-view chart (snow plotted on the right Y axis).
+ * Must be a named React component so Recharts 3 hooks work correctly.
+ */
+function NoDataLineRight({ gapData, color }) {
+  const xScale = useXAxisScale(0);
+  const yScale = useYAxisScale('right');
+  if (!xScale || !yScale || !gapData?.hasGap) return null;
+
+  const { fullGap, startSegment, endSegment } = gapData;
+
+  function toPath(pts) {
+    return pts
+      .map((pt, i) => `${i === 0 ? 'M' : 'L'}${xScale(pt.doy)},${yScale(pt.fsca)}`)
+      .join(' ');
+  }
+
+  function renderSeg(pts, bridgeAtEnd, key) {
+    if (!pts || pts.length < 2) return null;
+    const d         = toPath(pts);
+    const medianPts = bridgeAtEnd === true  ? pts.slice(0, -1)
+                    : bridgeAtEnd === false ? pts.slice(1)
+                    : pts;
+    const labelPt   = medianPts[Math.floor(medianPts.length / 2)];
+    return (
+      <g key={key}>
+        <path
+          d={d}
+          stroke={color}
+          strokeWidth={1.5}
+          strokeDasharray="5 4"
+          fill="none"
+          strokeOpacity={0.75}
+        />
+        {medianPts.map((pt, j) => (
+          <circle
+            key={j}
+            cx={xScale(pt.doy)}
+            cy={yScale(pt.fsca)}
+            r={3}
+            fill="none"
+            stroke={color}
+            strokeWidth={1.2}
+          />
+        ))}
+        {labelPt && (
+          <text
+            x={xScale(labelPt.doy)}
+            y={yScale(labelPt.fsca) - 10}
+            textAnchor="middle"
+            fill={color}
+            fontSize={9}
+            fontStyle="italic"
+            fontFamily={MONO}
+          >
+            no data
+          </text>
+        )}
+      </g>
+    );
+  }
+
+  return (
+    <g className="no-data-lines-right">
+      {fullGap      && renderSeg(fullGap,      null,  'full')}
+      {startSegment && renderSeg(startSegment, true,  'start')}
+      {endSegment   && renderSeg(endSegment,   false, 'end')}
+    </g>
+  );
+}
+
 // ── Individual-view tooltip ────────────────────────────────────
 function IndividualTooltip({ active, payload }) {
   if (!active || !payload?.length) return null;
@@ -411,7 +530,8 @@ export default function HydrologicalChart({
     // Precipitation: non-zero days only, always blue regardless of year
     const precipData = (PRECIP_BY_YEAR[selectedYear] ?? []).filter(d => d.value > 0);
     // Snow: Sentinel-2 scenes for the selected year, year-specific color
-    const snowData   = SNOW_BY_YEAR[selectedYear] ?? [];
+    const snowData     = SNOW_BY_YEAR[selectedYear] ?? [];
+    const snowGapData  = computeSnowGapData(snowData);
 
     const chartMargin = isMobile
       ? { top: 10, right: 5, bottom: 0, left: 0 }
@@ -473,7 +593,9 @@ export default function HydrologicalChart({
             />
           )}
 
-          {/* Right axis — snow cover %, year color */}
+          {/* Right axis — snow cover %, year color.
+              allowDataOverflow ensures the explicit domain=[0,100] is honoured
+              even when snowData is empty (no scenes for the selected year). */}
           {showSnow && (
             <YAxis
               yAxisId="right"
@@ -481,6 +603,7 @@ export default function HydrologicalChart({
               dataKey="fsca"
               type="number"
               domain={[0, 100]}
+              allowDataOverflow
               tickCount={isMobile ? 4 : 6}
               width={isMobile ? 28 : undefined}
               tick={{ fill: snowColor, fontSize: isMobile ? 10 : 11, fontFamily: MONO }}
@@ -526,6 +649,22 @@ export default function HydrologicalChart({
               r={5}
               line={{ stroke: snowColor, strokeWidth: 2, strokeOpacity: 0.7 }}
               lineType="joint"
+            />
+          )}
+
+          {/* Dashed no-data median interpolation for gaps at season edges */}
+          {showSnow && (
+            <NoDataLineRight gapData={snowGapData} color={C.snowGap} />
+          )}
+          {/* Invisible placeholder that injects the "Median (keine Daten)" legend entry */}
+          {showSnow && snowGapData?.hasGap && (
+            <Scatter
+              yAxisId="right"
+              name="Median (keine Daten)"
+              data={[]}
+              fill={C.snowGap}
+              legendType="line"
+              isAnimationActive={false}
             />
           )}
 
@@ -702,17 +841,19 @@ export default function HydrologicalChart({
               />
             )}
 
-            {/* Snow gap line — dashed grey for missing data (year-specific only) */}
-            {showSnow && isYearSpecific && (
+            {/* Snow gap line — dashed grey for missing data (year-specific only).
+                Only rendered (and legend entry shown) when the selected year
+                actually has data gaps (some snowInterp values are non-null). */}
+            {showSnow && isYearSpecific && chartData.some(d => d.snowInterp != null) && (
               <Line
                 yAxisId="right"
                 dataKey="snowInterp"
-                name="_snowInterp"
+                name="Schneebedeckung Median"
                 stroke={C.snowGap}
                 strokeWidth={1.5}
                 strokeDasharray="5 5"
                 connectNulls={false}
-                legendType="none"
+                legendType="line"
                 tooltipType="none"
                 dot={renderInterpDot}
                 activeDot={false}

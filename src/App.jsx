@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import Map from './components/Map'
 import HydrologicalChart from './components/HydrologicalChart'
-import SnowTimeSeriesChart from './components/SnowTimeSeriesChart'
 import AnnualTable from './components/AnnualTable'
 
 const LAYER_DEFS = [
@@ -299,21 +298,24 @@ export default function App() {
 
                 </div>{/* /data-controls-top */}
 
-                {/* Year strip — "Alle" is hidden when Einzelwerte is active (incompatible) */}
-                <div className="year-strip" role="group" aria-label="Jahresauswahl">
-                  {YEAR_OPTIONS
-                    .filter(y => !(y === 'all' && temporalResolution === 'individual'))
-                    .map(y => (
-                    <button
-                      key={y}
-                      className={`year-pill${selectedYear === y ? ' year-pill--active' : ''}`}
-                      aria-pressed={selectedYear === y}
-                      onClick={() => setSelectedYear(y)}
-                    >
-                      {y === 'all' ? 'Alle' : y}
-                    </button>
-                  ))}
-                </div>
+                {/* Year strip — hidden in table mode (table always shows all years);
+                    "Alle" is also hidden when Einzelwerte is active (incompatible). */}
+                {viewMode !== 'table' && (
+                  <div className="year-strip" role="group" aria-label="Jahresauswahl">
+                    {YEAR_OPTIONS
+                      .filter(y => !(y === 'all' && temporalResolution === 'individual'))
+                      .map(y => (
+                      <button
+                        key={y}
+                        className={`year-pill${selectedYear === y ? ' year-pill--active' : ''}`}
+                        aria-pressed={selectedYear === y}
+                        onClick={() => setSelectedYear(y)}
+                      >
+                        {y === 'all' ? 'Alle' : y}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
               </div>{/* /data-controls */}
             </div>{/* /data-pane-header */}
@@ -333,16 +335,6 @@ export default function App() {
                       onPointClick={setActiveDataDetail}
                     />
                   </div>
-                  {activeCategory === 'snow' && temporalResolution === 'monthly' && (
-                    <div className="data-section">
-                      <p className="panel-heading">Sentinel-2 Einzelszenen · 2018–2025</p>
-                      <SnowTimeSeriesChart
-                        selectedYear={selectedYear}
-                        activeDataDetail={activeDataDetail}
-                        onDataDetailChange={setActiveDataDetail}
-                      />
-                    </div>
-                  )}
                 </>
               )}
 
