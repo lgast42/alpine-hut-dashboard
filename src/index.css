@@ -448,10 +448,23 @@ body {
 .about-accordion.open .about-toggle { border-bottom-color: var(--border); }
 
 .about-text {
-  padding: 10px 12px;
+  padding: 10px 12px 12px;
   font-size: 11px;
   line-height: 1.65;
   color: var(--text-2);
+}
+
+.about-text p + p {
+  margin-top: 8px;
+}
+
+.about-footer {
+  margin-top: 10px !important;
+  font-size: 10px !important;
+  color: var(--text-3) !important;
+  line-height: 1.4;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
 }
 
 /* ── Content Column ──────────────────────────────────────── */

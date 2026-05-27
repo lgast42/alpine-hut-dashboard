@@ -246,7 +246,9 @@ export default function App() {
               </button>
               {aboutOpen && (
                 <div className="about-text">
-                  <p>{t('side.about.text')}</p>
+                  <p>{t('side.about.paragraph1')}</p>
+                  <p>{t('side.about.paragraph2')}</p>
+                  <p className="about-footer">{t('side.about.footer')}</p>
                 </div>
               )}
             </div>
@@ -536,7 +538,9 @@ export default function App() {
                 ✕
               </button>
             </div>
-            <p>{t('side.about.text')}</p>
+            <p>{t('side.about.paragraph1')}</p>
+            <p>{t('side.about.paragraph2')}</p>
+            <p className="about-footer">{t('side.about.footer')}</p>
           </div>
         </div>
       )}

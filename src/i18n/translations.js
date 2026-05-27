@@ -22,8 +22,10 @@ export const translations = {
         pipeline: 'Water Pipeline',
       },
       about: {
-        heading: 'About the Project',
-        text: 'Pilot analysis of the hydrological resilience of the Neue Prager Hütte (2796 m, Innergschlöß, East Tyrol). Catchment modelled via hydrologische Modellierung (MFD). Snow cover from Sentinel-2 NDSI (> 0.4). Precipitation from SPARTACUS v2.1 (GeoSphere Austria). The hydrological transition from nival-dominated to stochastic-pluvial is especially pronounced in Aug/Sep.',
+        heading:    'About this project',
+        paragraph1: 'Many alpine huts were historically supplied by nearby snowfields and glacier melt. As the cryosphere recedes, this natural buffer is shrinking, and water supply increasingly depends on short-term rainfall. The Neue Prager Hütte, which has had to close early in recent summers due to water scarcity, is the pilot site for this study.',
+        paragraph2: 'This dashboard maps the hut\'s water-supply catchment and reconstructs how snow cover and precipitation have evolved across the May–September seasons of 2018–2025. The catchment is delineated from a 0.5 m terrain model, snow cover is derived from Sentinel-2 satellite imagery, and precipitation comes from the SPARTACUS climate dataset. All inputs are open geodata and require no on-site instrumentation, which makes the workflow transferable to other hut sites.',
+        footer:     'Developed at the University of Innsbruck · Prototype, May 2026',
       },
     },
     map: {
@@ -135,8 +137,10 @@ export const translations = {
         pipeline: 'Wasserleitung',
       },
       about: {
-        heading: 'Über das Projekt',
-        text: 'Pilotanalyse der hydrologischen Resilienz der Neuen Prager Hütte (2796 m, Innergschlöß, Osttirol). Einzugsgebiet modelliert via hydrologische Modellierung (MFD). Schneebedeckung aus Sentinel-2 NDSI (> 0,4). Niederschlag aus SPARTACUS v2.1 (GeoSphere Austria). Der hydrologische Übergang von nival-dominiert zu stochastisch-pluvial ist für Aug/Sep besonders ausgeprägt.',
+        heading:    'Über das Projekt',
+        paragraph1: 'Viele alpine Schutzhütten wurden historisch von nahen Schneefeldern und Gletscherschmelze gespeist. Mit dem Rückgang der Kryosphäre schwindet dieser natürliche Puffer, und die Wasserversorgung hängt zunehmend von kurzfristigen Niederschlägen ab. Die Neue Prager Hütte, die in den vergangenen Sommern mehrfach wegen Wasserknappheit vorzeitig schließen musste, ist der Pilotstandort dieser Untersuchung.',
+        paragraph2: 'Das Dashboard kartiert das Versorgungs-Einzugsgebiet der Hütte und rekonstruiert, wie sich Schneebedeckung und Niederschlag über die Sommersaisons (Mai bis September) der Jahre 2018 bis 2025 entwickelt haben. Das Einzugsgebiet wird aus einem 0,5 m Geländemodell abgeleitet, die Schneebedeckung aus Sentinel-2-Satellitendaten, der Niederschlag aus dem SPARTACUS-Klimadatensatz. Alle Eingangsdaten sind offene Geodaten und erfordern keine Messinstrumente vor Ort, wodurch der Workflow auf andere Hüttenstandorte übertragbar ist.',
+        footer:     'Entwickelt an der Universität Innsbruck · Prototyp, Mai 2026',
       },
     },
     map: {
