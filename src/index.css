@@ -1037,6 +1037,18 @@ body {
   margin-top: auto;
 }
 
+/* ── Mobile-only About inside data panel ────────────────── */
+/* Visible below 768px; hidden on desktop (sidepanel handles it there) */
+.about-in-datapanel {
+  margin-top: 16px;
+  /* spans full width even in the 2-col desktop grid */
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 768px) {
+  .about-in-datapanel { display: none; }
+}
+
 /* ── Mobile Info Button (bottom-left of map, hidden ≥768px) ─ */
 .map-info-btn {
   position: absolute;

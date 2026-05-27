@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import Map from './components/Map'
 import HydrologicalChart from './components/HydrologicalChart'
 import AnnualTable from './components/AnnualTable'
+import AboutSection from './components/AboutSection'
 import { useLanguage } from './i18n/LanguageContext'
 
 const LAYER_DEFS = [
@@ -35,7 +36,6 @@ export default function App() {
   const [panelMinimized, setPanelMinimized] = useState(false)
   const [sideOpen,       setSideOpen]       = useState(true)
   const [legendOpen,     setLegendOpen]     = useState(() => window.innerWidth >= 768)
-  const [aboutOpen,      setAboutOpen]      = useState(false)
   const [infoModalOpen,  setInfoModalOpen]  = useState(false)
   const [layerVisible,   setLayerVisible]   = useState(
     Object.fromEntries(LAYER_DEFS.map(l => [l.key, true]))
@@ -238,19 +238,9 @@ export default function App() {
               )}
             </div>
 
-            {/* ── Fix #1a: About pushed to bottom of sidepanel ── */}
-            <div className={`about-accordion sidepanel-about ${aboutOpen ? 'open' : ''}`}>
-              <button className="about-toggle" onClick={() => setAboutOpen(v => !v)}>
-                <span>{t('side.about.heading')}</span>
-                <span>{aboutOpen ? '▴' : '▾'}</span>
-              </button>
-              {aboutOpen && (
-                <div className="about-text">
-                  <p>{t('side.about.paragraph1')}</p>
-                  <p>{t('side.about.paragraph2')}</p>
-                  <p className="about-footer">{t('side.about.footer')}</p>
-                </div>
-              )}
+            {/* ── About: bottom of sidepanel (desktop only) ── */}
+            <div className="sidepanel-about">
+              <AboutSection />
             </div>
           </div>
         </aside>
@@ -518,6 +508,11 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+              {/* ── About: mobile-only, inside scrollable data panel ── */}
+              <div className="about-in-datapanel">
+                <AboutSection />
+              </div>
             </div>
           </div>{/* /data-pane */}
 
