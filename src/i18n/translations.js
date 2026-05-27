@@ -1,14 +1,12 @@
 export const translations = {
   en: {
-    ui: {
-      headerTitle: 'Hydro-Monitor',
-      hutShort:    'NPH',
-      hutFull:     'Neue Prager Hütte',
-    },
     header: {
-      title:    'Hydrological Resilience of Alpine Huts',
-      subtitle: 'Neue Prager Hütte · 2796 m · Innergschlöß, East Tyrol',
-      badge:    'Hohe Tauern',
+      title:            'Hydrological Resilience of Alpine Huts',
+      subtitle:         'Neue Prager Hütte · 2796 m · Innergschlöß, East Tyrol',
+      productName:      'Post-Glacial Water Atlas',
+      productNameShort: 'Water Atlas',
+      badge:            'Prototype',
+      location:         'Neue Prager Hütte · 2 796 m',
     },
     side: {
       title: 'Analysis',
@@ -112,15 +110,13 @@ export const translations = {
   },
 
   de: {
-    ui: {
-      headerTitle: 'Hydro-Monitor',
-      hutShort:    'NPH',
-      hutFull:     'Neue Prager Hütte',
-    },
     header: {
-      title:    'Hydrologische Resilienz alpiner Schutzhütten',
-      subtitle: 'Neue Prager Hütte · 2796 m · Innergschlöß, Osttirol',
-      badge:    'Hohe Tauern',
+      title:            'Hydrologische Resilienz alpiner Schutzhütten',
+      subtitle:         'Neue Prager Hütte · 2796 m · Innergschlöß, Osttirol',
+      productName:      'Post-Glacial Water Atlas',
+      productNameShort: 'Water Atlas',
+      badge:            'Prototyp',
+      location:         'Neue Prager Hütte · 2 796 m',
     },
     side: {
       title: 'Analyse',

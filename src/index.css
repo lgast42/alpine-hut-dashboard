@@ -111,7 +111,6 @@ body {
 .header-center {
   display: flex;
   align-items: center;
-  gap: 6px;
   flex: 1;
   justify-content: center;
   min-width: 0;
@@ -123,22 +122,8 @@ body {
   flex-shrink: 0;
 }
 
-/* PoC badge */
-.project-badge {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-3);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 2px 7px;
-  white-space: nowrap;
-}
-
-/* "Hydro-Monitor" title */
-.header-project-title {
+/* Product name ("Post-Glacial Water Atlas") */
+.header-product-name {
   font-size: 14px;
   font-weight: 700;
   color: var(--text-1);
@@ -146,39 +131,49 @@ body {
   line-height: 1.2;
 }
 
-/* Hut name — full on desktop, short on mobile */
-.hut-name-desktop {
-  font-size: 12px;
+/* Full name visible by default; short name hidden until < 480 px */
+.product-name-full  { display: inline; }
+.product-name-short { display: none; }
+
+/* Prototype badge — subtle pill next to the product name */
+.prototype-badge {
+  font-size: 10px;
   font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Location string ("Neue Prager Hütte · 2 796 m") */
+.header-location {
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text-2);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: 0.01em;
 }
 
-.hut-name-mobile {
-  display: none;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-2);
-  white-space: nowrap;
-}
+/* ── Responsive header ───────────────────────────────────── */
 
-/* Elevation readout */
-.hut-elevation {
-  font-size: 11px;
-  color: var(--text-3);
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  font-family: 'IBM Plex Mono', monospace;
-}
-
-/* Mobile: swap full/short hut name, hide badge, shrink title slightly */
+/* Tablet / large mobile (480–767 px): everything still visible */
 @media (max-width: 767px) {
-  .hut-name-desktop       { display: none; }
-  .hut-name-mobile        { display: inline; }
-  .project-badge          { display: none; }
-  .header-project-title   { font-size: 13px; }
+  .header-product-name { font-size: 13px; }
+}
+
+/* Narrow mobile (< 480 px): hide location column, shorten product name */
+@media (max-width: 479px) {
+  .header-center      { display: none; }
+  .product-name-full  { display: none; }
+  .product-name-short { display: inline; }
+  .prototype-badge    { display: none; }
 }
 
 .header-brand {

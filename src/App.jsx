@@ -167,20 +167,21 @@ export default function App() {
       {/* ── Header ───────────────────────────────────────── */}
       <header className="app-header">
 
-        {/* Left: PoC badge + project title */}
+        {/* Left: product name + prototype badge */}
         <div className="header-left">
-          <span className="project-badge">PoC</span>
-          <h1 className="header-project-title">{t('ui.headerTitle')}</h1>
+          <h1 className="header-product-name">
+            <span className="product-name-full">{t('header.productName')}</span>
+            <span className="product-name-short">{t('header.productNameShort')}</span>
+          </h1>
+          <span className="prototype-badge">{t('header.badge')}</span>
         </div>
 
-        {/* Center: hut identity */}
+        {/* Center: location — hidden below 480 px */}
         <div className="header-center">
-          <span className="hut-name-desktop">{t('ui.hutFull')}</span>
-          <span className="hut-name-mobile">{t('ui.hutShort')}</span>
-          <span className="hut-elevation">2,796 m</span>
+          <span className="header-location">{t('header.location')}</span>
         </div>
 
-        {/* Right: language toggle */}
+        {/* Right: language toggle (unchanged) */}
         <div className="header-right">
           <button
             className="lang-toggle-btn"
