@@ -45,29 +45,44 @@ function setupLayers(map) {
     paint: { 'circle-radius': 7, 'circle-color': '#2B6CB0', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } })
 }
 
+// ── Popup HTML builder ─────────────────────────────────────────
+// Builds a styled Mapbox popup with a bold title, a thin divider,
+// and one <p> per fact line. Pure function — no React, no DOM side-effects.
+function popupHTML(t, titleKey, lineKeys) {
+  const sWrap  = `font-family:'Inter',sans-serif;font-size:13px;line-height:1.6;min-width:200px;max-width:260px;`
+  const sTitle = `margin:0 0 6px;font-size:14px;font-weight:600;color:#2D3748;`
+  const sSep   = `margin:0 0 6px;border:none;border-top:1px solid #E2E8F0;`
+  const sLine  = `margin:2px 0 0;color:#718096;`
+  const rows   = lineKeys.map(k => `<p style="${sLine}">${t(k)}</p>`).join('')
+  return `<div style="${sWrap}"><p style="${sTitle}">${t(titleKey)}</p><hr style="${sSep}">${rows}</div>`
+}
+
 // Called once after initial load – listeners survive style changes.
 // tRef holds the current translation function; reading tRef.current inside
 // each click handler ensures popups always use the active language.
 function setupInteractions(map, tRef) {
-  const ps = `font-family:'Inter',sans-serif;font-size:13px;line-height:1.5;`
-  const pt = `margin:0 0 4px;font-size:14px;font-weight:600;color:#2D3748;`
-  const pb = `margin:0;color:#718096;`
-
   map.on('click', 'hut', (e) => {
     const t = tRef.current
-    const coords = e.features[0].geometry.coordinates.slice()
     new mapboxgl.Popup({ offset: 12 })
-      .setLngLat(coords)
-      .setHTML(`<div style="${ps}"><p style="${pt}">${t('map.popup.hut_title')}</p><p style="${pb}">${t('map.popup.hut_desc')}</p></div>`)
+      .setLngLat(e.features[0].geometry.coordinates.slice())
+      .setHTML(popupHTML(t, 'map.popup.hut.title', [
+        'map.popup.hut.line1',
+        'map.popup.hut.line2',
+        'map.popup.hut.line3',
+        'map.popup.hut.line4',
+        'map.popup.hut.line5',
+      ]))
       .addTo(map)
   })
 
   map.on('click', 'intake', (e) => {
     const t = tRef.current
-    const coords = e.features[0].geometry.coordinates.slice()
     new mapboxgl.Popup({ offset: 12 })
-      .setLngLat(coords)
-      .setHTML(`<div style="${ps}"><p style="${pt}">${t('map.popup.intake_title')}</p><p style="${pb}">${t('map.popup.intake_desc')}</p></div>`)
+      .setLngLat(e.features[0].geometry.coordinates.slice())
+      .setHTML(popupHTML(t, 'map.popup.spring.title', [
+        'map.popup.spring.line1',
+        'map.popup.spring.line2',
+      ]))
       .addTo(map)
   })
 
@@ -75,7 +90,13 @@ function setupInteractions(map, tRef) {
     const t = tRef.current
     new mapboxgl.Popup({ offset: 4 })
       .setLngLat(e.lngLat)
-      .setHTML(`<div style="${ps}"><p style="${pt}">${t('map.popup.catchment_title')}</p><p style="${pb}">${t('map.popup.catchment_desc1')}</p><p style="${pb}">${t('map.popup.catchment_desc2')}</p></div>`)
+      .setHTML(popupHTML(t, 'map.popup.catchment.title', [
+        'map.popup.catchment.line1',
+        'map.popup.catchment.line2',
+        'map.popup.catchment.line3',
+        'map.popup.catchment.line4',
+        'map.popup.catchment.line5',
+      ]))
       .addTo(map)
   })
 
