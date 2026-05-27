@@ -109,9 +109,14 @@ export default function AnnualTable({
   // ── Render ───────────────────────────────────────────────────
   return (
     <div>
-      <p style={{ margin: '0 0 12px', fontSize: 13, color: '#94a3b8' }}>
-        {t(`table.sub_${activeCategory}`)}
-      </p>
+      <div style={{ marginBottom: 12 }}>
+        <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>
+          {t(`table.${activeCategory}.title`)}
+        </p>
+        <p style={{ margin: 0, fontSize: 11, color: '#94a3b8', lineHeight: 1.5 }}>
+          {t(`table.${activeCategory}.subtitle`)}
+        </p>
+      </div>
 
       <div style={{ overflowX: 'auto' }}>
         <table style={{

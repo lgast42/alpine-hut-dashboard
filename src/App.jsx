@@ -339,10 +339,6 @@ export default function App() {
 
             {/* ── Data pane header ─────────────────────────── */}
             <div className="data-pane-header">
-              <div className="data-header-row">
-                <h2>{t('panel.heading')}</h2>
-              </div>
-
               {/* ── Fix #4: controls restructured ─────────────────── */}
               <div className="data-controls">
 
@@ -510,7 +506,6 @@ export default function App() {
 
               {viewMode === 'table' && (
                 <div className="data-section data-section--full">
-                  <p className="panel-heading">{t('panel.heading_table')}</p>
                   <div className="annual-table-wrapper">
                     <AnnualTable
                       activeCategory={activeCategory}
