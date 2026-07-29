@@ -26,3 +26,10 @@ dist-ssr
 
 # Claude Code (IDE assistant config — not relevant for contributors)
 .claude/
+
+# Local tooling caches
+.vite/
+graphify-out/
+
+# Internal working documents — never publish
+_internal/
