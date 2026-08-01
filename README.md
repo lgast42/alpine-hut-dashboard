@@ -1,20 +1,18 @@
 # Wassermonitoring Alpine Schutzhütten
 
-Interaktives Dashboard zur Wasserversorgung alpiner Schutzhütten. Pilotstandort Neue Prager Hütte, Hohe Tauern.
+Dashboard zur Wasserversorgung alpiner Schutzhütten. Standort Neue Prager Hütte.
 
-**Live:** https://lgast42.github.io/alpine-hut-dashboard/
+Live: https://lgast42.github.io/alpine-hut-dashboard/
+
+Die Anwendung zeigt offene Fernerkundungs- und Klimadaten. Vor Ort erhobene
+Messwerte sind nicht enthalten.
 
 ## Setup
 
 ```bash
 npm install
+cp .env.example .env   # Mapbox Public Token eintragen
 npm run dev
-```
-
-Benötigt eine `.env` im Projektstamm mit einem Mapbox Access Token:
-
-```
-VITE_MAPBOX_TOKEN=
 ```
 
 ## Skripte
@@ -22,13 +20,21 @@ VITE_MAPBOX_TOKEN=
 | Befehl | Zweck |
 |---|---|
 | `npm run dev` | Entwicklungsserver |
-| `npm run build` | Produktions-Build nach `dist/` |
+| `npm run build` | Build nach `dist/` |
 | `npm run lint` | ESLint |
+| `npm run deploy` | Build und Veröffentlichung auf `gh-pages` |
 
-## Datengrundlage
+## Datenquellen
 
-Copernicus Sentinel-2 (ESA), SPARTACUS und SNOWGRID (GeoSphere Austria), Kartengrundlage Mapbox und OpenStreetMap.
+| Quelle | Lizenz |
+|---|---|
+| Copernicus Sentinel-2 (ESA) | Copernicus Open Licence |
+| GeoSphere Austria SPARTACUS | CC BY 4.0 |
+| GeoSphere Austria SNOWGRID-CL | CC BY 4.0 |
+| Mapbox | Terms of Service |
+| OpenStreetMap | ODbL |
 
 ## Rechte
 
-© Lucas Gasthauer, Universität Innsbruck, in Kooperation mit dem Deutschen Alpenverein. Alle Rechte vorbehalten. Keine Nutzung oder Weiterverwendung ohne Rücksprache.
+© 2026 Lucas Gasthauer. Alle Rechte vorbehalten.
+Für die angezeigten Daten gilt die Lizenz der jeweiligen Quelle.
