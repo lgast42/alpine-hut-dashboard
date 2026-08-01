@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "wasserleitung_line",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"xy_coordinate_resolution": 1e-15,
+"features": [
+{ "type": "Feature", "properties": { "fid": 1, "Name": "Wasserleitung" }, "geometry": { "type": "LineString", "coordinates": [ [ 12.389943276601095, 47.122302632003951 ], [ 12.392015178911908, 47.123299667067606 ], [ 12.39226327551536, 47.123074712930446 ] ] } }
+]
+}
