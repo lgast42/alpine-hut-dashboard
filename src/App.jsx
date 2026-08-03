@@ -63,7 +63,8 @@ export default function App() {
       LAYER_DEFS.forEach(def => {
         const vis = layerVisibleRef.current[def.key] ? 'visible' : 'none'
         def.ids.forEach(id => {
-          try { map.setLayoutProperty(id, 'visibility', vis) } catch (_) {}
+          // A layer may not exist in the currently loaded style.
+          try { map.setLayoutProperty(id, 'visibility', vis) } catch { /* ignore */ }
         })
       })
     }

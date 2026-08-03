@@ -126,15 +126,8 @@ export default function Map({ onMapReady }) {
   const tRef = useRef(t)
   useEffect(() => { tRef.current = t }, [t])
 
-  if (!TOKEN) {
-    return (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#EDF2F7', color: '#718096', fontSize: 14 }}>
-        {t('map.no_token')}
-      </div>
-    )
-  }
-
   useEffect(() => {
+    if (!TOKEN) return
     if (mapRef.current) return
 
     const map = new mapboxgl.Map({
@@ -160,6 +153,15 @@ export default function Map({ onMapReady }) {
 
   function handleHome() {
     mapRef.current?.flyTo({ center: [12.3923, 47.1231], zoom: 14, pitch: 0, bearing: 0, duration: 1500 })
+  }
+
+  // Placed after all hooks so the hook order stays identical on every render.
+  if (!TOKEN) {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#EDF2F7', color: '#718096', fontSize: 14 }}>
+        {t('map.no_token')}
+      </div>
+    )
   }
 
   return (
