@@ -22,4 +22,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
+desktop.ini
 .env
+.env.*
+!.env.example
+
+# Claude Code (IDE assistant config — not relevant for contributors)
+.claude/
+
+# Local tooling caches
+.vite/
+graphify-out/
+
+# Internal working documents — never publish
+_internal/
+CLAUDE.md
+blocklist.json
