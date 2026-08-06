@@ -37,5 +37,4 @@ graphify-out/
 
 # Internal working documents — never publish
 _internal/
-CLAUDE.md
 blocklist.json
