@@ -43,7 +43,11 @@ export default function AboutSection() {
             })}
           </p>
 
-          <p className="about-footer">{t('side.about.footer')}</p>
+          <p className="about-footer">
+            {t('side.about.credit')}
+            <br />
+            {t('side.about.footer')}
+          </p>
         </div>
       )}
     </div>

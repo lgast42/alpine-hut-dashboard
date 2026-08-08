@@ -190,12 +190,17 @@ body {
   .header-product-name { font-size: 13px; }
 }
 
-/* Narrow mobile (< 480 px): hide location column, shorten product name */
+/* Narrow mobile (< 480 px): shorten product name, compact site switcher.
+   The switcher stays visible — it is the only way to change sites. */
 @media (max-width: 479px) {
-  .header-center      { display: none; }
   .product-name-full  { display: none; }
   .product-name-short { display: inline; }
   .prototype-badge    { display: none; }
+  .site-select {
+    max-width: 150px;
+    font-size: 11px;
+    padding: 3px 22px 3px 8px;
+  }
 }
 
 .header-brand {

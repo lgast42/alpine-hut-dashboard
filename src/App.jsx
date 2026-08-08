@@ -612,7 +612,11 @@ export default function App() {
             </div>
             <p>{t('side.about.paragraph1')}</p>
             <p>{t('side.about.paragraph2')}</p>
-            <p className="about-footer">{t('side.about.footer')}</p>
+            <p className="about-footer">
+              {t('side.about.credit')}
+              <br />
+              {t('side.about.footer')}
+            </p>
           </div>
         </div>
       )}

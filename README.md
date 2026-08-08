@@ -15,6 +15,15 @@ cp .env.example .env   # Mapbox Public Token eintragen
 npm run dev
 ```
 
+## Datenmodule
+
+Alle angezeigten Zahlen stammen aus dem Export der Datenpipeline. Die
+JSON-Dateien unter `src/data/` sind generierte Artefakte und werden nicht
+von Hand bearbeitet; `src/data/export_manifest.json` weist Datenstand und
+erzeugenden Pipeline-Stand aus. `blocklist.json` (Projektwurzel, nicht
+versioniert) wird vom Exportskript der Pipeline mitgeliefert — ohne sie
+bricht `npm run check:blocked` und damit jeder Deploy ab.
+
 ## Skripte
 
 | Befehl | Zweck |
