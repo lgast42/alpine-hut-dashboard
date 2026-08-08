@@ -3,6 +3,7 @@ import Map from './components/Map'
 import HydrologicalChart from './components/HydrologicalChart'
 import AnnualTable from './components/AnnualTable'
 import AboutSection from './components/AboutSection'
+import SpringFlowPanel from './components/SpringFlowPanel'
 import { useLanguage } from './i18n/LanguageContext'
 import { dataYears, manifest, isRunningSeason } from './lib/dataset'
 
@@ -14,11 +15,16 @@ const LAYER_DEFS = [
   { key: 'pipeline',  ids: ['pipeline'] },
 ]
 
+// 'spring' is a placeholder category without data (publication pending);
+// it has no table view, no year strip and no resolution switch.
 const CATEGORIES = [
   { id: 'combined' },
   { id: 'snow'     },
   { id: 'precip'   },
+  { id: 'spring'   },
 ]
+
+const TABLE_EXCLUDED = new Set(['combined', 'spring'])
 
 // Years come from the export; a new season appears with the next export.
 const YEAR_OPTIONS = ['all', ...dataYears]
@@ -358,7 +364,7 @@ export default function App() {
                       className="mobile-select"
                       value={viewMode}
                       onChange={e => {
-                        if (e.target.value === 'table' && activeCategory === 'combined') selectCategory('snow')
+                        if (e.target.value === 'table' && TABLE_EXCLUDED.has(activeCategory)) selectCategory('snow')
                         setViewMode(e.target.value)
                       }}
                     >
@@ -373,14 +379,14 @@ export default function App() {
                       onChange={e => selectCategory(e.target.value)}
                     >
                       {CATEGORIES
-                        .filter(c => viewMode === 'chart' || c.id !== 'combined')
+                        .filter(c => viewMode === 'chart' || !TABLE_EXCLUDED.has(c.id))
                         .map(c => (
                           <option key={c.id} value={c.id}>{t(`panel.${c.id}`)}</option>
                         ))}
                     </select>
 
-                    {/* Year (chart mode only) */}
-                    {viewMode === 'chart' && (
+                    {/* Year (chart mode only, not for the spring placeholder) */}
+                    {viewMode === 'chart' && activeCategory !== 'spring' && (
                       <select
                         className="mobile-select"
                         value={String(selectedYear)}
@@ -398,8 +404,8 @@ export default function App() {
                       </select>
                     )}
 
-                    {/* Resolution (chart mode only) */}
-                    {viewMode === 'chart' && (
+                    {/* Resolution (chart mode only, not for the spring placeholder) */}
+                    {viewMode === 'chart' && activeCategory !== 'spring' && (
                       <select
                         className="mobile-select"
                         value={temporalResolution}
@@ -431,7 +437,7 @@ export default function App() {
                         className={`ctrl-seg-btn${viewMode === 'table' ? ' ctrl-seg-btn--active' : ''}`}
                         aria-pressed={viewMode === 'table'}
                         onClick={() => {
-                          if (activeCategory === 'combined') selectCategory('snow')
+                          if (TABLE_EXCLUDED.has(activeCategory)) selectCategory('snow')
                           setViewMode('table')
                         }}
                       >
@@ -440,7 +446,7 @@ export default function App() {
                     </div>
 
                     <div className="ctrl-pills" role="group" aria-label={t('panel.category_label')}>
-                      {CATEGORIES.filter(c => viewMode === 'chart' || c.id !== 'combined').map(c => (
+                      {CATEGORIES.filter(c => viewMode === 'chart' || !TABLE_EXCLUDED.has(c.id)).map(c => (
                         <button
                           key={c.id}
                           className={`ctrl-pill${activeCategory === c.id ? ' ctrl-pill--active' : ''}`}
@@ -452,7 +458,7 @@ export default function App() {
                       ))}
                     </div>
 
-                    {viewMode === 'chart' && (
+                    {viewMode === 'chart' && activeCategory !== 'spring' && (
                       <div className="ctrl-seg ctrl-seg--resolution" role="group" aria-label={t('panel.resolution_label')}>
                         <button
                           className={`ctrl-seg-btn${temporalResolution === 'monthly' ? ' ctrl-seg-btn--active' : ''}`}
@@ -476,7 +482,7 @@ export default function App() {
                     )}
                   </div>{/* /data-controls-top */}
 
-                  {viewMode !== 'table' && (
+                  {viewMode !== 'table' && activeCategory !== 'spring' && (
                     <div className="year-strip" role="group" aria-label={t('panel.year_label')}>
                       {YEAR_OPTIONS
                         .filter(y => !(y === 'all' && temporalResolution === 'individual'))
@@ -508,7 +514,13 @@ export default function App() {
 
             {/* ── Data pane content ────────────────────────── */}
             <div className="data-pane-inner">
-              {viewMode === 'chart' && (
+              {viewMode === 'chart' && activeCategory === 'spring' && (
+                <div className="data-section">
+                  <SpringFlowPanel />
+                </div>
+              )}
+
+              {viewMode === 'chart' && activeCategory !== 'spring' && (
                 <div className="data-section">
                   <p className="panel-heading">{t('panel.heading_chart')}</p>
                   <HydrologicalChart

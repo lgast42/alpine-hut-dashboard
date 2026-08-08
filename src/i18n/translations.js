@@ -72,6 +72,7 @@ export const translations = {
       combined:         'Combined',
       snow:             'Snow',
       precip:           'Precip.',
+      spring:           'Spring flow',
       monthly:          'Monthly',
       individual:       'Individual',
       monthly_title:    'Monthly averages',
@@ -99,6 +100,13 @@ export const translations = {
       leg_snow_ind:     'Snow Cover (%)',
       vuln:             'Vulnerability Phase',
       no_data:          'no data',
+    },
+    spring: {
+      title:     'Spring flow',
+      status:    'in preparation',
+      paragraph: 'The spring supplying the Neue Prager Hütte has been monitored continuously since June 2026. Analysis and publication of the measurements are in preparation.',
+      empty:     'No published measurements yet',
+      note:      'This category receives data as soon as publication is cleared. No values are shown until then.',
     },
     months: {
       May: 'May', Jun: 'Jun', Jul: 'Jul', Aug: 'Aug', Sep: 'Sep',
@@ -204,6 +212,7 @@ export const translations = {
       combined:         'Kombiniert',
       snow:             'Schnee',
       precip:           'Nied.',
+      spring:           'Quellschüttung',
       monthly:          'Monatswerte',
       individual:       'Einzelwerte',
       monthly_title:    'Monatliche Mittelwerte',
@@ -231,6 +240,13 @@ export const translations = {
       leg_snow_ind:     'Schneebedeckung (%)',
       vuln:             'Vulnerabilitätsphase',
       no_data:          'no data',
+    },
+    spring: {
+      title:     'Quellschüttung',
+      status:    'in Vorbereitung',
+      paragraph: 'Die Quelle, die die Neue Prager Hütte versorgt, wird seit Juni 2026 kontinuierlich gemessen. Auswertung und Veröffentlichung der Messwerte sind in Vorbereitung.',
+      empty:     'Noch keine veröffentlichten Messwerte',
+      note:      'Diese Kategorie erhält Daten, sobald die Veröffentlichung freigegeben ist. Bis dahin werden keine Werte angezeigt.',
     },
     months: {
       May: 'Mai', Jun: 'Jun', Jul: 'Jul', Aug: 'Aug', Sep: 'Sep',

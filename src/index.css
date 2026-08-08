@@ -735,6 +735,69 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+/* ── Spring-flow placeholder panel ───────────────────────── */
+.spring-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.spring-panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.spring-panel-title {
+  margin-bottom: 10px;
+}
+
+.spring-badge {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fbbf24;
+  white-space: nowrap;
+}
+
+.spring-text {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-2);
+  max-width: 640px;
+}
+
+.spring-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 200px;
+  border: 1.5px dashed rgba(148, 163, 184, 0.35);
+  border-radius: var(--radius-sm);
+  color: var(--text-3);
+}
+
+.spring-empty-label {
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-style: italic;
+}
+
+.spring-note {
+  margin: 10px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
 /* Data status line from the export manifest */
 .data-stamp {
   padding: 0 14px 6px;
