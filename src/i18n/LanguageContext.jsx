@@ -40,6 +40,7 @@ export function LanguageProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- provider and hook belong together; fast refresh is a dev nicety
 export function useLanguage() {
   const ctx = useContext(LanguageContext)
   if (!ctx) throw new Error('useLanguage must be used inside <LanguageProvider>')

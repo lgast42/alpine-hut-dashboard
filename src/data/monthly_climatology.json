@@ -1,0 +1,58 @@
+{
+  "window": [
+    2018,
+    2025
+  ],
+  "months": [
+    {
+      "month": 5,
+      "rr_mean_mm": 197.4,
+      "rr_min_mm": 136.0,
+      "rr_max_mm": 251.3,
+      "fsca_mean": 0.775,
+      "fsca_min": 0.6474,
+      "fsca_max": 0.8918,
+      "fsca_years": 8
+    },
+    {
+      "month": 6,
+      "rr_mean_mm": 170.6,
+      "rr_min_mm": 65.2,
+      "rr_max_mm": 256.3,
+      "fsca_mean": 0.633,
+      "fsca_min": 0.3135,
+      "fsca_max": 0.8356,
+      "fsca_years": 8
+    },
+    {
+      "month": 7,
+      "rr_mean_mm": 242.3,
+      "rr_min_mm": 152.4,
+      "rr_max_mm": 344.4,
+      "fsca_mean": 0.2619,
+      "fsca_min": 0.0104,
+      "fsca_max": 0.5167,
+      "fsca_years": 8
+    },
+    {
+      "month": 8,
+      "rr_mean_mm": 255.7,
+      "rr_min_mm": 162.2,
+      "rr_max_mm": 382.1,
+      "fsca_mean": 0.0713,
+      "fsca_min": 0.0,
+      "fsca_max": 0.2497,
+      "fsca_years": 8
+    },
+    {
+      "month": 9,
+      "rr_mean_mm": 168.7,
+      "rr_min_mm": 87.0,
+      "rr_max_mm": 322.3,
+      "fsca_mean": 0.1611,
+      "fsca_min": 0.0,
+      "fsca_max": 0.5975,
+      "fsca_years": 8
+    }
+  ]
+}

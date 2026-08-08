@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { annualData, sceneData } from '../data/hydrologicalData'
+import { useState } from 'react'
+import { annualData, sceneData } from '../lib/dataset'
 import { useLanguage } from '../i18n/LanguageContext'
 
 // ── Constants ──────────────────────────────────────────────────
@@ -57,16 +57,14 @@ export default function AnnualTable({
   const [hoveredYear, setHoveredYear] = useState(null)
   const [clickedCell, setClickedCell] = useState(null) // { key, scenes }
 
-  // Clear local selection when another component steals activeDataDetail
-  useEffect(() => {
-    if (!activeDataDetail || activeDataDetail.source !== 'annual-table') {
-      setClickedCell(null)
-    }
-  }, [activeDataDetail])
+  // The local selection only counts while this table owns activeDataDetail;
+  // when another component takes it over, the stored cell is ignored.
+  const effectiveClickedCell =
+    activeDataDetail?.source === 'annual-table' ? clickedCell : null
 
   function handleCellClick(year, monthKey, value, unit) {
     const key = `${year}-${monthKey}`
-    if (clickedCell?.key === key) {
+    if (effectiveClickedCell?.key === key) {
       // Second click → dismiss
       setClickedCell(null)
       onDataDetailChange?.(null)
@@ -168,8 +166,8 @@ export default function AnnualTable({
                   {MONTHS.map(m => {
                     const { precip, snow } = row.months[m.key]
                     const cellKey   = `${row.year}-${m.key}`
-                    const isClicked = clickedCell?.key === cellKey
-                    const scenes    = isClicked ? clickedCell.scenes : null
+                    const isClicked = effectiveClickedCell?.key === cellKey
+                    const scenes    = isClicked ? effectiveClickedCell.scenes : null
 
                     // Heatmap colour depends on active category
                     const { bg, color } = activeCategory === 'precip'

@@ -467,6 +467,30 @@ body {
   padding-top: 8px;
 }
 
+.about-sources-heading {
+  margin-top: 10px !important;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-3);
+}
+
+.about-sources {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text-3);
+}
+
+.about-provenance {
+  margin-top: 8px !important;
+  font-size: 10px !important;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text-3) !important;
+}
+
 /* ── Content Column ──────────────────────────────────────── */
 .content-col {
   display: flex;
@@ -709,6 +733,18 @@ body {
   display: flex;
   flex-direction: column;
   border-bottom: 1px solid var(--border);
+}
+
+/* Data status line from the export manifest */
+.data-stamp {
+  padding: 0 14px 6px;
+  font-size: 10px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text-3);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Title row: h2 + expand button */

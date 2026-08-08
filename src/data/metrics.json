@@ -1,0 +1,34 @@
+{
+  "meltout_trend": {
+    "value_days_per_decade": -9.3,
+    "window": [
+      1961,
+      2026
+    ],
+    "n_years": 55
+  },
+  "winter_snow_storage": {
+    "latest_winter": 2026,
+    "latest_max_swe_mm": 442.0,
+    "latest_complete": false,
+    "reference_period": [
+      1961,
+      1990
+    ],
+    "reference_mean_mm": 694.0,
+    "change_pct": -36.3
+  },
+  "summer_temperature": {
+    "recent_period": [
+      1996,
+      2025
+    ],
+    "recent_mean_c": 5.1,
+    "reference_period": [
+      1961,
+      1990
+    ],
+    "reference_mean_c": 3.4,
+    "delta_k": 1.6
+  }
+}

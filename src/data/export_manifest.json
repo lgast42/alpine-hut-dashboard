@@ -1,0 +1,35 @@
+{
+  "generated_at": "2026-08-08T11:06:13+02:00",
+  "pipeline_commit": "10bd212",
+  "pipeline_version": "0.4.0",
+  "contract_version": "1.1.0",
+  "blocklist_version": 1,
+  "data_through": "2026-08-06",
+  "sources": [
+    {
+      "name": "Copernicus Sentinel-2 L2A",
+      "licence": "Copernicus open",
+      "cleared_for_public": true
+    },
+    {
+      "name": "GeoSphere Austria SPARTACUS",
+      "licence": "CC BY 4.0",
+      "cleared_for_public": true
+    },
+    {
+      "name": "GeoSphere Austria SNOWGRID-CL",
+      "licence": "CC BY 4.0",
+      "cleared_for_public": true
+    }
+  ],
+  "modules": {
+    "precipitation_daily": 1321,
+    "snow_cover_scenes": 142,
+    "monthly_summary": 43,
+    "monthly_climatology": 5,
+    "meltout": 63,
+    "winter_swe": 65,
+    "metrics": 3
+  },
+  "records": 1642
+}

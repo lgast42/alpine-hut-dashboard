@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLanguage } from '../i18n/LanguageContext'
+import { manifest } from '../lib/dataset'
 
 /**
  * Reusable "About this project" accordion.
@@ -22,6 +23,26 @@ export default function AboutSection() {
         <div className="about-text">
           <p>{t('side.about.paragraph1')}</p>
           <p>{t('side.about.paragraph2')}</p>
+
+          {/* Data sources and licences, straight from the export manifest */}
+          <p className="about-sources-heading">{t('side.about.sources')}</p>
+          <ul className="about-sources">
+            {manifest.sources.map(s => (
+              <li key={s.name}>{s.name} · {s.licence}</li>
+            ))}
+            <li>Mapbox · Terms of Service</li>
+            <li>OpenStreetMap · ODbL</li>
+          </ul>
+
+          {/* Every shown number is traceable to this pipeline state */}
+          <p className="about-provenance">
+            {t('side.about.provenance', {
+              contract: manifest.contract_version,
+              version: manifest.pipeline_version,
+              commit: manifest.pipeline_commit,
+            })}
+          </p>
+
           <p className="about-footer">{t('side.about.footer')}</p>
         </div>
       )}

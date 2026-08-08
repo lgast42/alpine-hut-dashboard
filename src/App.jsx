@@ -4,6 +4,7 @@ import HydrologicalChart from './components/HydrologicalChart'
 import AnnualTable from './components/AnnualTable'
 import AboutSection from './components/AboutSection'
 import { useLanguage } from './i18n/LanguageContext'
+import { dataYears, manifest, isRunningSeason } from './lib/dataset'
 
 const LAYER_DEFS = [
   { key: 'hut',       ids: ['hut'] },
@@ -19,7 +20,8 @@ const CATEGORIES = [
   { id: 'precip'   },
 ]
 
-const YEAR_OPTIONS = ['all', 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025]
+// Years come from the export; a new season appears with the next export.
+const YEAR_OPTIONS = ['all', ...dataYears]
 
 function applyMapPadding(map) {
   const mobile = window.innerWidth < 768
@@ -31,6 +33,13 @@ function applyMapPadding(map) {
 
 export default function App() {
   const { lang, toggleLang, t } = useLanguage()
+
+  // Visible data status from the export manifest (Handoff §3.7).
+  const dataThroughLabel = new Intl.DateTimeFormat(
+    lang === 'de' ? 'de-AT' : 'en-GB',
+    { day: 'numeric', month: 'long', year: 'numeric' }
+  ).format(new Date(manifest.data_through))
+  const hasRunningSeason = dataYears.some(isRunningSeason)
 
   const [panelHeight,    setPanelHeight]    = useState(40)
   const [panelMinimized, setPanelMinimized] = useState(false)
@@ -48,7 +57,12 @@ export default function App() {
   const [activeDataDetail,   setActiveDataDetail]   = useState(null)
   const [temporalResolution, setTemporalResolution] = useState('monthly')
 
-  useEffect(() => { setActiveDataDetail(null) }, [activeCategory, selectedYear, temporalResolution])
+  // A change of category, year or resolution invalidates the detail popup.
+  // Cleared in the event handlers below (not in an effect) so the reset
+  // happens in the same render as the change itself.
+  function selectCategory(c) { setActiveCategory(c); setActiveDataDetail(null) }
+  function selectYear(y)     { setSelectedYear(y);   setActiveDataDetail(null) }
+  function selectResolution(r) { setTemporalResolution(r); setActiveDataDetail(null) }
 
   const mapRef          = useRef(null)
   const dataPaneRef     = useRef(null)
@@ -158,7 +172,7 @@ export default function App() {
   // ── Mobile year-select change (keeps monthly/individual consistent) ──
   function handleMobileYearChange(e) {
     const y = e.target.value === 'all' ? 'all' : Number(e.target.value)
-    setSelectedYear(y)
+    selectYear(y)
     if (y === 'all') setTemporalResolution('monthly')
   }
 
@@ -344,7 +358,7 @@ export default function App() {
                       className="mobile-select"
                       value={viewMode}
                       onChange={e => {
-                        if (e.target.value === 'table' && activeCategory === 'combined') setActiveCategory('snow')
+                        if (e.target.value === 'table' && activeCategory === 'combined') selectCategory('snow')
                         setViewMode(e.target.value)
                       }}
                     >
@@ -356,7 +370,7 @@ export default function App() {
                     <select
                       className="mobile-select"
                       value={activeCategory}
-                      onChange={e => setActiveCategory(e.target.value)}
+                      onChange={e => selectCategory(e.target.value)}
                     >
                       {CATEGORIES
                         .filter(c => viewMode === 'chart' || c.id !== 'combined')
@@ -376,7 +390,9 @@ export default function App() {
                           .filter(y => !(y === 'all' && temporalResolution === 'individual'))
                           .map(y => (
                             <option key={y} value={String(y)}>
-                              {y === 'all' ? t('panel.all') : y}
+                              {y === 'all' ? t('panel.all')
+                                : isRunningSeason(y) ? `${y} (${t('panel.running')})`
+                                : y}
                             </option>
                           ))}
                       </select>
@@ -387,7 +403,7 @@ export default function App() {
                       <select
                         className="mobile-select"
                         value={temporalResolution}
-                        onChange={e => setTemporalResolution(e.target.value)}
+                        onChange={e => selectResolution(e.target.value)}
                       >
                         <option value="monthly">{t('panel.monthly')}</option>
                         {selectedYear !== 'all' && (
@@ -415,7 +431,7 @@ export default function App() {
                         className={`ctrl-seg-btn${viewMode === 'table' ? ' ctrl-seg-btn--active' : ''}`}
                         aria-pressed={viewMode === 'table'}
                         onClick={() => {
-                          if (activeCategory === 'combined') setActiveCategory('snow')
+                          if (activeCategory === 'combined') selectCategory('snow')
                           setViewMode('table')
                         }}
                       >
@@ -429,7 +445,7 @@ export default function App() {
                           key={c.id}
                           className={`ctrl-pill${activeCategory === c.id ? ' ctrl-pill--active' : ''}`}
                           aria-pressed={activeCategory === c.id}
-                          onClick={() => setActiveCategory(c.id)}
+                          onClick={() => selectCategory(c.id)}
                         >
                           {t(`panel.${c.id}`)}
                         </button>
@@ -441,7 +457,7 @@ export default function App() {
                         <button
                           className={`ctrl-seg-btn${temporalResolution === 'monthly' ? ' ctrl-seg-btn--active' : ''}`}
                           aria-pressed={temporalResolution === 'monthly'}
-                          onClick={() => setTemporalResolution('monthly')}
+                          onClick={() => selectResolution('monthly')}
                           title={t('panel.monthly_title')}
                         >
                           {t('panel.monthly')}
@@ -450,7 +466,7 @@ export default function App() {
                           <button
                             className={`ctrl-seg-btn${temporalResolution === 'individual' ? ' ctrl-seg-btn--active' : ''}`}
                             aria-pressed={temporalResolution === 'individual'}
-                            onClick={() => setTemporalResolution('individual')}
+                            onClick={() => selectResolution('individual')}
                             title={t('panel.individual_title')}
                           >
                             {t('panel.individual')}
@@ -469,9 +485,11 @@ export default function App() {
                             key={y}
                             className={`year-pill${selectedYear === y ? ' year-pill--active' : ''}`}
                             aria-pressed={selectedYear === y}
-                            onClick={() => setSelectedYear(y)}
+                            onClick={() => selectYear(y)}
+                            title={isRunningSeason(y) ? t('panel.running_title') : undefined}
+                            aria-label={isRunningSeason(y) ? `${y} – ${t('panel.running_title')}` : undefined}
                           >
-                            {y === 'all' ? t('panel.all') : y}
+                            {y === 'all' ? t('panel.all') : isRunningSeason(y) ? `${y}*` : y}
                           </button>
                         ))}
                     </div>
@@ -480,6 +498,12 @@ export default function App() {
                 </div>{/* /data-controls-desktop */}
 
               </div>{/* /data-controls */}
+
+              {/* Data status from the export manifest */}
+              <div className="data-stamp">
+                {t('panel.data_through')}: {dataThroughLabel}
+                {hasRunningSeason && ` · * ${t('panel.running_title')}`}
+              </div>
             </div>{/* /data-pane-header */}
 
             {/* ── Data pane content ────────────────────────── */}
