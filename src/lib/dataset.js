@@ -10,6 +10,9 @@ import precipitationDaily from '../data/precipitation_daily.json'
 import snowCoverScenes from '../data/snow_cover_scenes.json'
 import monthlySummary from '../data/monthly_summary.json'
 import monthlyClimatology from '../data/monthly_climatology.json'
+import meltoutExport from '../data/meltout.json'
+import winterSweExport from '../data/winter_swe.json'
+import metricsExport from '../data/metrics.json'
 import exportManifest from '../data/export_manifest.json'
 
 const MONTH_KEYS = { 5: 'may', 6: 'jun', 7: 'jul', 8: 'aug', 9: 'sep' }
@@ -82,6 +85,16 @@ export const monthlyAverages = monthlyClimatology.months.map(m => ({
   precipitation: m.rr_mean_mm,
   snow: m.fsca_mean == null ? null : m.fsca_mean * PCT,
 }))
+
+// Meltout (Ausaperung): window, trend number, drawable trend segment and
+// the two point series — all straight from the export.
+export const meltout = meltoutExport
+
+// Maximum snow water equivalent per hydrological year, 1962–2026.
+export const winterSweData = winterSweExport
+
+// The three metric tiles, verbatim from the export.
+export const metrics = metricsExport
 
 // Cross-year min/max per month (spread band and error bars), same source.
 export const varianceData = monthlyClimatology.months.map(m => ({

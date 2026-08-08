@@ -5,6 +5,7 @@ import AnnualTable from './components/AnnualTable'
 import AboutSection from './components/AboutSection'
 import SpringFlowPanel from './components/SpringFlowPanel'
 import SiteProfilePanel from './components/SiteProfilePanel'
+import MeltoutPanel from './components/MeltoutPanel'
 import { useLanguage } from './i18n/LanguageContext'
 import { dataYears, manifest, isRunningSeason } from './lib/dataset'
 import { SITES, getSite, DEFAULT_SITE_ID } from './sites/sites'
@@ -17,16 +18,20 @@ const LAYER_DEFS = [
   { key: 'pipeline',  ids: ['pipeline'] },
 ]
 
-// 'spring' is a placeholder category without data (publication pending);
-// it has no table view, no year strip and no resolution switch.
+// 'meltout' is the long-term category (own panel, no year navigation).
+// 'spring' is a placeholder category without data (publication pending).
 const CATEGORIES = [
   { id: 'combined' },
   { id: 'snow'     },
   { id: 'precip'   },
+  { id: 'meltout'  },
   { id: 'spring'   },
 ]
 
-const TABLE_EXCLUDED = new Set(['combined', 'spring'])
+const TABLE_EXCLUDED = new Set(['combined', 'meltout', 'spring'])
+
+// Categories that bring their own panel: no year strip, no resolution switch.
+const PANEL_CATEGORIES = new Set(['meltout', 'spring'])
 
 // Years come from the export; a new season appears with the next export.
 const YEAR_OPTIONS = ['all', ...dataYears]
@@ -407,8 +412,8 @@ export default function App() {
                         ))}
                     </select>
 
-                    {/* Year (chart mode only, not for the spring placeholder) */}
-                    {viewMode === 'chart' && activeCategory !== 'spring' && (
+                    {/* Year (chart mode only, not for own-panel categories) */}
+                    {viewMode === 'chart' && !PANEL_CATEGORIES.has(activeCategory) && (
                       <select
                         className="mobile-select"
                         value={String(selectedYear)}
@@ -426,8 +431,8 @@ export default function App() {
                       </select>
                     )}
 
-                    {/* Resolution (chart mode only, not for the spring placeholder) */}
-                    {viewMode === 'chart' && activeCategory !== 'spring' && (
+                    {/* Resolution (chart mode only, not for own-panel categories) */}
+                    {viewMode === 'chart' && !PANEL_CATEGORIES.has(activeCategory) && (
                       <select
                         className="mobile-select"
                         value={temporalResolution}
@@ -480,7 +485,7 @@ export default function App() {
                       ))}
                     </div>
 
-                    {viewMode === 'chart' && activeCategory !== 'spring' && (
+                    {viewMode === 'chart' && !PANEL_CATEGORIES.has(activeCategory) && (
                       <div className="ctrl-seg ctrl-seg--resolution" role="group" aria-label={t('panel.resolution_label')}>
                         <button
                           className={`ctrl-seg-btn${temporalResolution === 'monthly' ? ' ctrl-seg-btn--active' : ''}`}
@@ -504,7 +509,7 @@ export default function App() {
                     )}
                   </div>{/* /data-controls-top */}
 
-                  {viewMode !== 'table' && activeCategory !== 'spring' && (
+                  {viewMode !== 'table' && !PANEL_CATEGORIES.has(activeCategory) && (
                     <div className="year-strip" role="group" aria-label={t('panel.year_label')}>
                       {YEAR_OPTIONS
                         .filter(y => !(y === 'all' && temporalResolution === 'individual'))
@@ -543,13 +548,19 @@ export default function App() {
                 </div>
               )}
 
+              {siteHasData && viewMode === 'chart' && activeCategory === 'meltout' && (
+                <div className="data-section">
+                  <MeltoutPanel />
+                </div>
+              )}
+
               {siteHasData && viewMode === 'chart' && activeCategory === 'spring' && (
                 <div className="data-section">
                   <SpringFlowPanel />
                 </div>
               )}
 
-              {siteHasData && viewMode === 'chart' && activeCategory !== 'spring' && (
+              {siteHasData && viewMode === 'chart' && !PANEL_CATEGORIES.has(activeCategory) && (
                 <div className="data-section">
                   <p className="panel-heading">{t('panel.heading_chart')}</p>
                   <HydrologicalChart
