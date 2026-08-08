@@ -4,8 +4,10 @@ import HydrologicalChart from './components/HydrologicalChart'
 import AnnualTable from './components/AnnualTable'
 import AboutSection from './components/AboutSection'
 import SpringFlowPanel from './components/SpringFlowPanel'
+import SiteProfilePanel from './components/SiteProfilePanel'
 import { useLanguage } from './i18n/LanguageContext'
 import { dataYears, manifest, isRunningSeason } from './lib/dataset'
+import { SITES, getSite, DEFAULT_SITE_ID } from './sites/sites'
 
 const LAYER_DEFS = [
   { key: 'hut',       ids: ['hut'] },
@@ -46,6 +48,10 @@ export default function App() {
     { day: 'numeric', month: 'long', year: 'numeric' }
   ).format(new Date(manifest.data_through))
   const hasRunningSeason = dataYears.some(isRunningSeason)
+
+  const [activeSiteId,   setActiveSiteId]   = useState(DEFAULT_SITE_ID)
+  const activeSite = getSite(activeSiteId)
+  const siteHasData = activeSite.status === 'full'
 
   const [panelHeight,    setPanelHeight]    = useState(40)
   const [panelMinimized, setPanelMinimized] = useState(false)
@@ -197,9 +203,20 @@ export default function App() {
           <span className="prototype-badge">{t('header.badge')}</span>
         </div>
 
-        {/* Center: location — hidden below 480 px */}
+        {/* Center: site switcher — hidden below 480 px */}
         <div className="header-center">
-          <span className="header-location">{t('header.location')}</span>
+          <select
+            className="site-select"
+            value={activeSiteId}
+            onChange={e => setActiveSiteId(e.target.value)}
+            aria-label={t('sites.switch_label')}
+          >
+            {SITES.map(s => (
+              <option key={s.id} value={s.id} disabled={s.status === 'planned'}>
+                {s.status === 'planned' ? t('sites.planned') : t(`sites.${s.id}.short`)}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Right: language toggle (unchanged) */}
@@ -234,7 +251,8 @@ export default function App() {
           </div>
 
           <div className="sidepanel-content">
-            {/* Layer legend */}
+            {/* Layer legend — NPH layers, only shown for that site */}
+            {activeSite.hasLayerLegend && (
             <div className={`layer-legend ${legendOpen ? 'open' : ''}`}>
               <button className="legend-toggle-btn" onClick={() => setLegendOpen(v => !v)}>
                 <span>{t('side.layers.heading')}</span>
@@ -258,6 +276,7 @@ export default function App() {
                 </ul>
               )}
             </div>
+            )}
 
             {/* ── About: bottom of sidepanel (desktop only) ── */}
             <div className="sidepanel-about">
@@ -271,9 +290,10 @@ export default function App() {
 
           {/* MAP PANE */}
           <div className="map-pane">
-            <Map onMapReady={handleMapReady} />
+            <Map onMapReady={handleMapReady} site={activeSite} />
 
             {/* Mobile: Layer legend overlay (top-right) */}
+            {activeSite.hasLayerLegend && (
             <div className={`map-legend-overlay ${legendOpen ? 'open' : ''}`}>
               <button className="legend-toggle-btn" onClick={() => setLegendOpen(v => !v)}>
                 <span>{t('side.layers.short')} {legendOpen ? '▴' : '▾'}</span>
@@ -296,6 +316,7 @@ export default function App() {
                 </ul>
               )}
             </div>
+            )}
 
             {/* ── Fix #1b: Mobile info button ────────────── */}
             <button
@@ -350,7 +371,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* ── Data pane header ─────────────────────────── */}
+            {/* ── Data pane header (controls only exist for data sites) ── */}
+            {siteHasData && (
             <div className="data-pane-header">
               {/* ── Fix #4: controls restructured ─────────────────── */}
               <div className="data-controls">
@@ -510,17 +532,24 @@ export default function App() {
                 {t('panel.data_through')}: {dataThroughLabel}
                 {hasRunningSeason && ` · * ${t('panel.running_title')}`}
               </div>
-            </div>{/* /data-pane-header */}
+            </div>
+            )}{/* /data-pane-header */}
 
             {/* ── Data pane content ────────────────────────── */}
             <div className="data-pane-inner">
-              {viewMode === 'chart' && activeCategory === 'spring' && (
+              {!siteHasData && (
+                <div className="data-section">
+                  <SiteProfilePanel />
+                </div>
+              )}
+
+              {siteHasData && viewMode === 'chart' && activeCategory === 'spring' && (
                 <div className="data-section">
                   <SpringFlowPanel />
                 </div>
               )}
 
-              {viewMode === 'chart' && activeCategory !== 'spring' && (
+              {siteHasData && viewMode === 'chart' && activeCategory !== 'spring' && (
                 <div className="data-section">
                   <p className="panel-heading">{t('panel.heading_chart')}</p>
                   <HydrologicalChart
@@ -533,7 +562,7 @@ export default function App() {
                 </div>
               )}
 
-              {viewMode === 'table' && (
+              {siteHasData && viewMode === 'table' && (
                 <div className="data-section data-section--full">
                   <div className="annual-table-wrapper">
                     <AnnualTable

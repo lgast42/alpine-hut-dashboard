@@ -59,7 +59,31 @@ export const translations = {
           line1: 'Catchment outlet where water is collected',
           line2: 'Spring reservoir: 12 m³',
         },
+        richterhuette: {
+          title: 'Richterhütte',
+          line1: '2 374 m a.s.l. · Rainbach valley near Krimml',
+          line2: 'Analysis in preparation · site visit September 2026',
+        },
       },
+    },
+    sites: {
+      switch_label: 'Site',
+      planned:      'Further site',
+      nph:           { short: 'Neue Prager Hütte · 2 796 m' },
+      richterhuette: { short: 'Richterhütte · 2 374 m' },
+    },
+    siteProfile: {
+      title:  'Richterhütte',
+      status: 'analysis in preparation',
+      intro:  'Second site of the water monitoring programme: the Richterhütte in the Rainbach valley near Krimml (Salzburg). The site analysis is in preparation; a site visit is scheduled for September 2026. No time series are shown until the analysis is published.',
+      facts: {
+        elevation:  { label: 'Elevation',            value: '2 374 m a.s.l.' },
+        catchment:  { label: 'Catchment area',       value: 'approx. 34 ha' },
+        springflow: { label: 'Spring flow (minimum)', value: '0.05 l/s' },
+        storage:    { label: 'Storage volume',       value: '2.25 m³' },
+        park:       { label: 'Setting',              value: 'Core zone, Hohe Tauern National Park' },
+      },
+      source: 'Figures from the existing site assessment report on the Richterhütte water supply.',
     },
     panel: {
       open:             'Open data panel',
@@ -199,7 +223,31 @@ export const translations = {
           line1: 'Tiefster Punkt des Einzugsgebiets, hier wird das Wasser gefasst',
           line2: 'Quellbehälter: 12 m³',
         },
+        richterhuette: {
+          title: 'Richterhütte',
+          line1: '2 374 m ü. A. · Rainbachtal bei Krimml',
+          line2: 'Analyse in Vorbereitung · Ortstermin September 2026',
+        },
       },
+    },
+    sites: {
+      switch_label: 'Standort',
+      planned:      'Weiterer Standort',
+      nph:           { short: 'Neue Prager Hütte · 2 796 m' },
+      richterhuette: { short: 'Richterhütte · 2 374 m' },
+    },
+    siteProfile: {
+      title:  'Richterhütte',
+      status: 'Analyse in Vorbereitung',
+      intro:  'Zweiter Standort des Wassermonitorings: die Richterhütte im Rainbachtal bei Krimml (Salzburg). Die Standortanalyse ist in Vorbereitung, der Ortstermin ist für September 2026 geplant. Bis zur Veröffentlichung der Analyse werden keine Zeitreihen gezeigt.',
+      facts: {
+        elevation:  { label: 'Höhe',                    value: '2 374 m ü. A.' },
+        catchment:  { label: 'Einzugsgebiet',           value: 'ca. 34 ha' },
+        springflow: { label: 'Quellschüttung (minimal)', value: '0,05 l/s' },
+        storage:    { label: 'Speichervolumen',         value: '2,25 m³' },
+        park:       { label: 'Lage',                    value: 'Kernzone Nationalpark Hohe Tauern' },
+      },
+      source: 'Angaben aus dem vorliegenden Gutachten zur Wasserversorgung der Richterhütte.',
     },
     panel: {
       open:             'Datenpanel öffnen',

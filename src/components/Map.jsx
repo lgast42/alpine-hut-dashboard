@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { useLanguage } from '../i18n/LanguageContext'
+import { SITES, getSite } from '../sites/sites'
 
 const TOKEN = import.meta.env.VITE_MAPBOX_TOKEN
 if (TOKEN) mapboxgl.accessToken = TOKEN
@@ -43,6 +44,17 @@ function setupLayers(map) {
   map.addSource('intake', { type: 'geojson', data: `${import.meta.env.BASE_URL}data/tankfassung_nph.geojson` })
   map.addLayer({ id: 'intake', type: 'circle', source: 'intake',
     paint: { 'circle-radius': 7, 'circle-color': '#2B6CB0', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } })
+
+  // Markers for profile-only sites (currently the Richterhütte): amber to
+  // signal "analysis in preparation", as opposed to the red full-data hut.
+  SITES.filter(s => s.marker).forEach(site => {
+    map.addSource(`site-${site.id}`, {
+      type: 'geojson',
+      data: { type: 'Feature', geometry: { type: 'Point', coordinates: site.center } },
+    })
+    map.addLayer({ id: `site-${site.id}`, type: 'circle', source: `site-${site.id}`,
+      paint: { 'circle-radius': 8, 'circle-color': '#F59E0B', 'circle-stroke-width': 2, 'circle-stroke-color': '#ffffff' } })
+  })
 }
 
 // ── Popup HTML builder ─────────────────────────────────────────
@@ -100,7 +112,20 @@ function setupInteractions(map, tRef) {
       .addTo(map)
   })
 
-  ;['hut', 'intake'].forEach(layer => {
+  SITES.filter(s => s.marker).forEach(site => {
+    map.on('click', `site-${site.id}`, (e) => {
+      const t = tRef.current
+      new mapboxgl.Popup({ offset: 12 })
+        .setLngLat(e.features[0].geometry.coordinates.slice())
+        .setHTML(popupHTML(t, `map.popup.${site.id}.title`, [
+          `map.popup.${site.id}.line1`,
+          `map.popup.${site.id}.line2`,
+        ]))
+        .addTo(map)
+    })
+  })
+
+  ;['hut', 'intake', ...SITES.filter(s => s.marker).map(s => `site-${s.id}`)].forEach(layer => {
     map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer' })
     map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = '' })
   })
@@ -115,7 +140,7 @@ function setupInteractions(map, tRef) {
   })
 }
 
-export default function Map({ onMapReady }) {
+export default function Map({ onMapReady, site = getSite('nph') }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const [activeStyle, setActiveStyle] = useState('terrain')
@@ -126,6 +151,9 @@ export default function Map({ onMapReady }) {
   const tRef = useRef(t)
   useEffect(() => { tRef.current = t }, [t])
 
+  // Site currently framed by the camera (init below, updated on switch).
+  const framedSiteRef = useRef(null)
+
   useEffect(() => {
     if (!TOKEN) return
     if (mapRef.current) return
@@ -133,10 +161,11 @@ export default function Map({ onMapReady }) {
     const map = new mapboxgl.Map({
       container: containerRef.current,
       style: STYLES[0].url,
-      center: [12.3923, 47.1231],
-      zoom: 14,
-      maxBounds: [[12.34, 47.09], [12.45, 47.16]],
+      center: site.center,
+      zoom: site.zoom,
+      maxBounds: site.maxBounds,
     })
+    framedSiteRef.current = site
 
     map.on('style.load', () => setupLayers(map))
     map.on('load', () => setupInteractions(map, tRef))
@@ -144,7 +173,24 @@ export default function Map({ onMapReady }) {
     mapRef.current = map
     onMapReady?.(map)
     return () => { map.remove(); mapRef.current = null }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- map is created once; site changes are handled by the fly-to effect
   }, [])
+
+  // Fly to the newly selected site. Bounds are released before the flight
+  // (the target may lie outside the previous site's bounds) and re-applied
+  // once the camera has arrived.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map || framedSiteRef.current?.id === site.id) return
+    framedSiteRef.current = site
+    map.setMaxBounds(null)
+    map.flyTo({ center: site.center, zoom: site.zoom, pitch: 0, bearing: 0, duration: 2400, essential: true })
+    map.once('moveend', () => {
+      if (framedSiteRef.current?.id === site.id && site.maxBounds) {
+        map.setMaxBounds(site.maxBounds)
+      }
+    })
+  }, [site])
 
   function handleStyleSwitch(style) {
     setActiveStyle(style.id)
@@ -152,7 +198,7 @@ export default function Map({ onMapReady }) {
   }
 
   function handleHome() {
-    mapRef.current?.flyTo({ center: [12.3923, 47.1231], zoom: 14, pitch: 0, bearing: 0, duration: 1500 })
+    mapRef.current?.flyTo({ center: site.center, zoom: site.zoom, pitch: 0, bearing: 0, duration: 1500 })
   }
 
   // Placed after all hooks so the hook order stays identical on every render.
